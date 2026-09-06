@@ -3,6 +3,8 @@ import type { MemoryCell } from "../../models/memory";
 import { formatAddress } from "../../utils/formatAddress";
 import { AddressLabel } from "./AddressLabel";
 
+import "./MemoryBox.css";
+
 interface MemoryBoxProps {
   cell: MemoryCell;
 }
@@ -33,15 +35,22 @@ export function MemoryBox({
   cell,
 }: MemoryBoxProps) {
   const isPointer = cell.dataType === "int_pointer";
+  const pointerTarget = isPointer
+    ? typeof cell.value === "number"
+      ? cell.value
+      : undefined
+    : undefined;
 
   return (
     <article
+      className="memory-box"
       data-memory-cell-address={cell.address}
+      data-memory-cell-type={cell.dataType}
+      data-pointer-source={pointerTarget}
       aria-label={`Memory cell for ${cell.name}`}
     >
       <header>
-        <strong>{cell.name}</strong>
-        <span>{formatDataType(cell.dataType)}</span>
+        <span><strong>{cell.name}</strong> {formatDataType(cell.dataType)}</span>
       </header>
 
       <dl>
@@ -49,13 +58,7 @@ export function MemoryBox({
           <dt>Value</dt>
 
           <dd>
-            <span
-              data-pointer-source={
-                isPointer ? cell.address : undefined
-              }
-            >
-              {formatValue(cell)}
-            </span>
+            {formatValue(cell)}
           </dd>
         </div>
 

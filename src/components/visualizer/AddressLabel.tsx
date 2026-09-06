@@ -11,10 +11,7 @@ export function AddressLabel({
   address,
 }: AddressLabelProps) {
   return (
-    <span
-      data-memory-address={address}
-      aria-label={`Memory address ${formatAddress(address)}`}
-    >
+    <span aria-label={`Memory address ${formatAddress(address)}`}>
       {formatAddress(address)}
     </span>
   );

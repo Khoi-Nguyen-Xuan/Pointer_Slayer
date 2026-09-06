@@ -18,13 +18,17 @@ export interface ElementRect {
 }
 
 export interface ElementPositions {
-  pointerSources: Map<number, ElementRect>;
+  pointerSources: Map<number, ElementRect[]>;
+  addressSources: Map<number, ElementRect>;
   addressTargets: Map<number, ElementRect>;
+  memoryTargets: Map<number, ElementRect>;
 }
 
 const createEmptyPositions = (): ElementPositions => ({
-  pointerSources: new Map<number, ElementRect>(),
+  pointerSources: new Map<number, ElementRect[]>(),
+  addressSources: new Map<number, ElementRect>(),
   addressTargets: new Map<number, ElementRect>(),
+  memoryTargets: new Map<number, ElementRect>(),
 });
 
 function getRelativeRect(
@@ -62,7 +66,7 @@ function rectsEqual(
   );
 }
 
-function mapsEqual(
+function rectMapsEqual(
   first: Map<number, ElementRect>,
   second: Map<number, ElementRect>,
 ): boolean {
@@ -73,11 +77,33 @@ function mapsEqual(
   for (const [address, firstRect] of first) {
     const secondRect = second.get(address);
 
-    if (
-      secondRect === undefined ||
-      !rectsEqual(firstRect, secondRect)
-    ) {
+    if (secondRect === undefined || !rectsEqual(firstRect, secondRect)) {
       return false;
+    }
+  }
+
+  return true;
+}
+
+function sourceMapsEqual(
+  first: Map<number, ElementRect[]>,
+  second: Map<number, ElementRect[]>,
+): boolean {
+  if (first.size !== second.size) {
+    return false;
+  }
+
+  for (const [address, firstRect] of first) {
+    const secondRect = second.get(address);
+
+    if (secondRect === undefined || firstRect.length !== secondRect.length) {
+      return false;
+    }
+
+    for (let index = 0; index < firstRect.length; index += 1) {
+      if (!rectsEqual(firstRect[index], secondRect[index])) {
+        return false;
+      }
     }
   }
 
@@ -89,8 +115,10 @@ function positionsEqual(
   second: ElementPositions,
 ): boolean {
   return (
-    mapsEqual(first.pointerSources, second.pointerSources) &&
-    mapsEqual(first.addressTargets, second.addressTargets)
+    sourceMapsEqual(first.pointerSources, second.pointerSources) &&
+    rectMapsEqual(first.addressSources, second.addressSources) &&
+    rectMapsEqual(first.addressTargets, second.addressTargets) &&
+    rectMapsEqual(first.memoryTargets, second.memoryTargets)
   );
 }
 
@@ -113,8 +141,10 @@ export function useElementPositions(
     const measure = () => {
       const containerRect = container.getBoundingClientRect();
 
-      const pointerSources = new Map<number, ElementRect>();
+      const pointerSources = new Map<number, ElementRect[]>();
+      const addressSources = new Map<number, ElementRect>();
       const addressTargets = new Map<number, ElementRect>();
+      const memoryTargets = new Map<number, ElementRect>();
 
       const pointerSourceElements =
         container.querySelectorAll<HTMLElement>(
@@ -129,7 +159,25 @@ export function useElementPositions(
           continue;
         }
 
-        pointerSources.set(
+        const sources = pointerSources.get(address) ?? [];
+        sources.push(getRelativeRect(element, containerRect));
+        pointerSources.set(address, sources);
+      }
+
+      const addressSourceElements =
+        container.querySelectorAll<HTMLElement>(
+          "[data-address-source]",
+        );
+
+      for (const element of addressSourceElements) {
+        const rawAddress = element.dataset.addressSource;
+        const address = Number(rawAddress);
+
+        if (!Number.isFinite(address)) {
+          continue;
+        }
+
+        addressSources.set(
           address,
           getRelativeRect(element, containerRect),
         );
@@ -154,9 +202,30 @@ export function useElementPositions(
         );
       }
 
+      const memoryTargetElements =
+        container.querySelectorAll<HTMLElement>(
+          "[data-memory-cell-address]",
+        );
+
+      for (const element of memoryTargetElements) {
+        const rawAddress = element.dataset.memoryCellAddress;
+        const address = Number(rawAddress);
+
+        if (!Number.isFinite(address)) {
+          continue;
+        }
+
+        memoryTargets.set(
+          address,
+          getRelativeRect(element, containerRect),
+        );
+      }
+
       const nextPositions: ElementPositions = {
         pointerSources,
+        addressSources,
         addressTargets,
+        memoryTargets,
       };
 
       setPositions((previousPositions) =>
@@ -190,7 +259,7 @@ export function useElementPositions(
 
       const measurableElements =
         container.querySelectorAll<HTMLElement>(
-          "[data-pointer-source], [data-memory-address]",
+          "[data-pointer-source], [data-address-source], [data-memory-address], [data-memory-cell-address]",
         );
 
       for (const element of measurableElements) {

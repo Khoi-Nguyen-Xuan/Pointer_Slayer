@@ -1,4 +1,9 @@
-import type { ChangeEvent } from "react";
+import Editor, { type OnMount } from "@monaco-editor/react";
+import { useEffect, useRef } from "react";
+
+import type * as Monaco from "monaco-editor";
+
+import "./CodeEditor.css";
 
 interface CodeEditorProps {
   code: string;
@@ -13,30 +18,73 @@ export function CodeEditor({
   activeLine = null,
   disabled = false,
 }: CodeEditorProps) {
-  const handleChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
-    onChange(event.target.value);
+  const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
+  const decorationIdsRef = useRef<string[]>([]);
+
+  const updateActiveLine = (editor: Monaco.editor.IStandaloneCodeEditor) => {
+    decorationIdsRef.current = editor.deltaDecorations(
+      decorationIdsRef.current,
+      activeLine === null
+        ? []
+        : [{
+            range: {
+              startLineNumber: activeLine,
+              startColumn: 1,
+              endLineNumber: activeLine,
+              endColumn: 1,
+            },
+            options: {
+              isWholeLine: true,
+              className: "code-editor-active-line",
+            },
+          }],
+    );
   };
 
+  const handleMount: OnMount = (editor) => {
+    editorRef.current = editor;
+    updateActiveLine(editor);
+  };
+
+  useEffect(() => {
+    const editor = editorRef.current;
+
+    if (editor === null) {
+      return;
+    }
+
+    updateActiveLine(editor);
+  }, [activeLine]);
+
   return (
-    <section aria-label="C code editor">
+    <section className="code-editor" aria-label="C code editor">
       <header>
         <h2>Code</h2>
-
+{/* 
         {activeLine !== null && (
           <span>
             Current line: {activeLine}
           </span>
-        )}
+        )} */}
       </header>
 
-      <textarea
-        value={code}
-        onChange={handleChange}
-        disabled={disabled}
-        spellCheck={false}
-        aria-label="C source code"
-        rows={18}
-      />
+      <div className="code-editor-surface">
+        <Editor
+          height="100%"
+          language="c"
+          theme="vs-dark"
+          value={code}
+          onChange={(value) => onChange(value ?? "")}
+          onMount={handleMount}
+          options={{
+            automaticLayout: true,
+            minimap: { enabled: false },
+            readOnly: disabled,
+            scrollBeyondLastLine: false,
+            tabSize: 2,
+          }}
+        />
+      </div>
     </section>
   );
 }

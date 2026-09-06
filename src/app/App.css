@@ -1,0 +1,75 @@
+main{
+    padding: 20px 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 50px;
+    min-height: 100svh;
+    box-sizing: border-box;
+    background:
+        radial-gradient(circle at 12% 8%, var(--accent-bg), transparent 32%),
+        radial-gradient(circle at 88% 78%, rgba(56, 189, 248, 0.08), transparent 34%),
+        linear-gradient(135deg, var(--bg), #11131c 55%, var(--bg));
+}
+
+.header{
+    color: var(--header);
+}
+
+.controls-container{
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    justify-content: left;
+    align-items: center;
+    width: 100%;
+}
+
+.step-controls-container{
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    justify-content: left;
+    align-items: center;
+    width: 100%;
+}
+
+.editor-visualizer-container{
+    display: flex;
+    flex-direction: row;
+    position: relative;
+    justify-content: center;
+    gap: 50px;
+    width: 100%;
+}
+
+.editor-visualizer-container > div:first-child{
+    width: 45%;
+    flex: 0 1 40%;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.editor-visualizer-container > section:last-child{
+    width: 50%;
+    flex: 0 1 55%;
+    text-align: left;
+    min-width: 450px;
+}
+
+@media (max-width: 900px){
+    .editor-visualizer-container{
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .editor-visualizer-container > div:first-child,
+    .editor-visualizer-container > section:last-child{
+        width: 100%;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+}

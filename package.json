@@ -12,6 +12,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
@@ -26,4 +27,3 @@
     "vitest": "^4.1.11"
   }
 }
-

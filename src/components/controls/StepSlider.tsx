@@ -1,5 +1,7 @@
 import type { ChangeEvent } from "react";
 
+import "./StepSlider.css";
+
 interface StepSliderProps {
   currentStepIndex: number;
   totalSteps: number;
@@ -22,7 +24,7 @@ export function StepSlider({
   };
 
   return (
-    <section aria-label="Simulation step slider">
+    <section className="step-slider" aria-label="Simulation step slider">
       <label htmlFor="simulation-step-slider">
         Simulation step
       </label>
