@@ -1,0 +1,38 @@
+.memory-box{
+    padding: 10px;
+    border: 1px solid var(--social-bg);
+    border-radius: 8px;
+    background: var(--code-color);
+    font-size: 15px;
+}
+
+.memory-box dl{
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 0;
+}
+
+.memory-box dl > div{
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+}
+
+.memory-box dt{
+    color: var(--text);
+    font-weight: 600;
+}
+
+.memory-box dd{
+    margin: 0;
+    text-align: right;
+}
+
+strong{
+    color: var(--header);
+}
+
+dd {
+    color: var(--header);
+}

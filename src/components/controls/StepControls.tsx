@@ -1,3 +1,5 @@
+import "./StepControls.css";
+
 interface StepControlsProps {
   canGoPrevious: boolean;
   canGoNext: boolean;
@@ -18,7 +20,7 @@ export function StepControls({
   const hasSteps = totalSteps > 0;
 
   return (
-    <section aria-label="Simulation controls">
+    <section className="step-controls" aria-label="Simulation controls">
       <button
         type="button"
         onClick={onPrevious}
