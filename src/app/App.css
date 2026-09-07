@@ -45,8 +45,8 @@ main{
 }
 
 .editor-visualizer-container > div:first-child{
-    width: 45%;
-    flex: 0 1 40%;
+    width: 50%;
+    flex: 0 1 50%;
     text-align: left;
     display: flex;
     flex-direction: column;
@@ -54,8 +54,8 @@ main{
 }
 
 .editor-visualizer-container > section:last-child{
-    width: 50%;
-    flex: 0 1 55%;
+    width: 45%;
+    flex: 0 1 45%;
     text-align: left;
     min-width: 450px;
 }

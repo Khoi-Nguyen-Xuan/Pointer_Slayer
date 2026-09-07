@@ -12,8 +12,8 @@ h2{
 
 .memory-cells{
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(100px, 0.45fr) minmax(0, 1fr);
-    gap: 30px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 70px;
     padding-top: 8px;
 }
 
@@ -23,19 +23,11 @@ h2{
     gap: 16px;
 }
 
-.memory-addresses{
-    justify-content: flex-start;
-}
-
-/* @media (max-width: 900px){
-    .memory-cells{
+@media (max-width: 900px){
+    /* .memory-cells{
         grid-template-columns: 1fr;
-    }
-
-    .memory-addresses{
-        order: -1;
-    }
-} */
+    } */
+}
 
 .memory-arrows{
     position: absolute;
@@ -50,7 +42,6 @@ h2{
     fill: none;
     stroke: var(--accent-border);
     stroke-width: 2;
-    marker-end: url("#memory-arrowhead");
 }
 
 .memory-arrows path{

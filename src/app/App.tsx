@@ -85,6 +85,7 @@ export function App() {
         </div>
         <MemoryVisualizer
           memory={currentStep?.memory ?? null}
+          animationKey={currentStepIndex}
         />
       </div>
 

@@ -1,92 +1,105 @@
+import { useEffect, useRef } from "react";
+
 import type { ElementPositions } from "../../hooks/useElementPositions";
 
 interface SvgArrowLayerProps {
   positions: ElementPositions;
-  pointerAddresses: Set<number>;
+  animationKey: number;
 }
 
 export function SvgArrowLayer({
   positions,
-  pointerAddresses,
+  animationKey,
 }: SvgArrowLayerProps) {
+  const arrowRefs = useRef<Map<string, SVGGElement>>(new Map());
   const arrows: Array<{
+    id: string;
     source: { x: number; y: number };
     target: { x: number; y: number };
   }> = [];
 
   for (const [targetAddress, sources] of positions.pointerSources) {
-    const addressTarget = positions.addressTargets.get(targetAddress);
-    const memoryTarget = positions.memoryTargets.get(targetAddress);
-    const targetIsPointer = pointerAddresses.has(targetAddress);
-    const target = targetIsPointer ? memoryTarget : addressTarget;
-
+    const target = positions.memoryTargets.get(targetAddress);
     if (target === undefined) {
       continue;
     }
 
     for (const source of sources) {
-      const pointsToAddress = !targetIsPointer;
-      const pointsRight = source.centerX < target.centerX;
+      const pointsRight = source.rect.centerX < target.centerX;
+      const id = `${source.address}->${targetAddress}`;
 
       arrows.push({
+        id,
         source: {
-          x: pointsToAddress ? source.left : pointsRight ? source.right : source.left,
-          y: source.centerY,
+          x: pointsRight ? source.rect.right : source.rect.left,
+          y: source.rect.centerY,
         },
         target: {
-          x: pointsToAddress ? target.right : pointsRight ? target.left : target.right,
+          x: pointsRight ? target.left : target.right,
           y: target.centerY,
         },
       });
     }
   }
 
-  for (const [address, source] of positions.addressSources) {
-    const target = positions.memoryTargets.get(address);
+  useEffect(() => {
+    for (const arrow of arrows) {
+      const id = arrow.id;
+      const group = arrowRefs.current.get(id);
+      const animations = Array.from(
+        group?.querySelectorAll("animate, animateMotion") ?? [],
+      ) as SVGAnimationElement[];
 
-    if (target === undefined) {
-      continue;
+      for (const animation of animations) {
+        animation.beginElement();
+      }
     }
-
-    const pointsRight = source.centerX < target.centerX;
-
-    arrows.push({
-      source: {
-        x: pointsRight ? source.right : source.left,
-        y: source.centerY,
-      },
-      target: {
-        x: pointsRight ? target.left : target.right,
-        y: target.centerY,
-      },
-    });
-  }
+  }, [animationKey, positions]);
 
   return (
     <svg className="memory-arrows" aria-hidden="true">
-      <defs>
-        <marker
-          id="memory-arrowhead"
-          markerHeight="4"
-          markerWidth="4"
-          orient="auto-start-reverse"
-          refX="3.5"
-          refY="2"
-          viewBox="0 0 4 4"
+      {arrows.map((arrow) => (
+        <g
+          key={arrow.id}
+          ref={(group) => {
+            if (group === null) {
+              arrowRefs.current.delete(arrow.id);
+            } else {
+              arrowRefs.current.set(arrow.id, group);
+            }
+          }}
         >
-          <path d="M 0 0 L 4 2 L 0 4 z" />
-        </marker>
-      </defs>
+          <line
+            pathLength={1}
+            strokeDasharray="0 1"
+            x1={arrow.source.x}
+            x2={arrow.target.x}
+            y1={arrow.source.y}
+            y2={arrow.target.y}
+          >
+            <animate
+              attributeName="stroke-dasharray"
+              begin="indefinite"
+              dur="700ms"
+              fill="freeze"
+              from="0 1"
+              to="1 0"
+            />
+          </line>
 
-      {arrows.map((arrow, index) => (
-        <line
-          key={`${arrow.source.x}-${arrow.source.y}-${index}`}
-          markerEnd="url(#memory-arrowhead)"
-          x1={arrow.source.x}
-          x2={arrow.target.x}
-          y1={arrow.source.y}
-          y2={arrow.target.y}
-        />
+          <path
+            className="memory-arrowhead"
+            d="M -5 -3 L 0 0 L -5 3 Z"
+          >
+            <animateMotion
+              begin="indefinite"
+              dur="700ms"
+              fill="freeze"
+              path={`M ${arrow.source.x} ${arrow.source.y} L ${arrow.target.x} ${arrow.target.y}`}
+              rotate="auto"
+            />
+          </path>
+        </g>
       ))}
     </svg>
   );

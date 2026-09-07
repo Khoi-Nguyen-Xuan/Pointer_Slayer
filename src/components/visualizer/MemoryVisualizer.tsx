@@ -2,7 +2,6 @@ import { useRef } from "react";
 
 import { useElementPositions } from "../../hooks/useElementPositions";
 import type { MemoryState } from "../../models/memory";
-import { AddressBox } from "./AddressBox";
 import { MemoryBox } from "./MemoryBox";
 import { SvgArrowLayer } from "./SvgArrowLayer";
 
@@ -10,10 +9,12 @@ import "./MemoryVisualizer.css";
 
 interface MemoryVisualizerProps {
   memory: MemoryState | null;
+  animationKey: number;
 }
 
 export function MemoryVisualizer({
   memory,
+  animationKey,
 }: MemoryVisualizerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const positions = useElementPositions(containerRef, memory);
@@ -29,12 +30,6 @@ export function MemoryVisualizer({
       </section>
     );
   }
-
-  const pointerAddresses = new Set(
-    memory.cells
-      .filter((cell) => cell.dataType === "int_pointer")
-      .map((cell) => cell.address),
-  );
 
   return (
     <section aria-label="Memory visualization">
@@ -52,17 +47,6 @@ export function MemoryVisualizer({
               ))}
           </div>
 
-          <div className="memory-column memory-addresses">
-            {memory.cells.map((cell) => (
-              <AddressBox
-                key={cell.address}
-                address={cell.address}
-                dataType={cell.dataType}
-                value={cell.value}
-              />
-            ))}
-          </div>
-
           <div className="memory-column memory-pointers">
             {memory.cells
               .filter((cell) => cell.dataType === "int_pointer")
@@ -74,7 +58,7 @@ export function MemoryVisualizer({
 
         <SvgArrowLayer
           positions={positions}
-          pointerAddresses={pointerAddresses}
+          animationKey={animationKey}
         />
       </div>
     </section>
