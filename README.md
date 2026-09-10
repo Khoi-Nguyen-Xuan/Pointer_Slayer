@@ -2,6 +2,15 @@
 
 **An interactive C pointer and memory visualizer built with React and TypeScript.**
 
+
+## Demo
+
+**Live Demo:** https://pointer-slayer.netlify.app/
+
+**Repository:** https://github.com/Khoi-Nguyen-Xuan/Pointer_Slayer
+
+---
+
 Pointer Slayer is an educational web application designed to help students that I'm TAing in CMPUT 201 (Practical Programming Methodology) understand one of the most challenging concepts in introductory C programming: **pointers and memory**.
 
 Instead of simply showing the output of a C program, Pointer Slayer parses a supported subset of C code, simulates its execution entirely in the browser, and visualizes how variables, memory addresses, and pointers change **step by step**.
@@ -19,18 +28,6 @@ Pointer Slayer turns code like this into an interactive visualization showing va
 > Pointer Slayer is intentionally **not a compiler or IDE**. 
 ---
 
-## Demo
-
-**Live Demo:** Coming soon
-
-**Repository:** https://github.com/Khoi-Nguyen-Xuan/Pointer_Slayer
-
-
-```md
-![Pointer Slayer Demo](./docs/pointer-slayer-demo.png)
-```
-
----
 
 # Features
 
