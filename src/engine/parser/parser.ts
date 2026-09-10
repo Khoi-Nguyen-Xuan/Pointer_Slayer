@@ -5,8 +5,6 @@ import { PARSER_PATTERNS } from "./patterns";
  * A parsed statement together with its location
  * in the original source code.
  *
- * Keeping line information for:
- *
  * - step navigation
  * - highlighting the active editor line
  * - explanations
@@ -227,9 +225,6 @@ export function parseLine(line: string): Statement | null {
 
 /**
  * Parse an entire C program.
- *
- * For the MVP, Pointer Slayer expects one supported
- * statement per source-code line.
  */
 export function parseProgram(
   sourceCode: string,
