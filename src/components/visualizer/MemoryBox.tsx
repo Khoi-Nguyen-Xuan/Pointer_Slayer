@@ -7,6 +7,7 @@ import "./MemoryBox.css";
 
 interface MemoryBoxProps {
   cell: MemoryCell;
+  isHighlighted?: boolean;
 }
 
 function formatDataType(dataType: MemoryCell["dataType"]): string {
@@ -33,6 +34,7 @@ function formatValue(cell: MemoryCell): string {
 
 export function MemoryBox({
   cell,
+  isHighlighted = false,
 }: MemoryBoxProps) {
   const isPointer = cell.dataType === "int_pointer";
   const pointerTarget = isPointer
@@ -43,7 +45,7 @@ export function MemoryBox({
 
   return (
     <article
-      className="memory-box"
+      className={`memory-box${isHighlighted ? " memory-box-highlighted" : ""}`}
       data-memory-cell-address={cell.address}
       data-memory-cell-type={cell.dataType}
       data-pointer-source={pointerTarget}

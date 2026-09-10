@@ -7,22 +7,32 @@ interface SvgArrowLayerProps {
   positions: ElementPositions;
   animationKey: number;
   memory: MemoryState;
+  animateTargetUpdates: boolean;
+  activePointerName: string | null;
 }
 
 export function SvgArrowLayer({
   positions,
   animationKey,
   memory,
+  animateTargetUpdates,
+  activePointerName,
 }: SvgArrowLayerProps) {
   const arrowRefs = useRef<Map<string, SVGGElement>>(new Map());
   const arrowheadRefs = useRef<Map<string, SVGPathElement>>(new Map());
-  const previousArrowSignatures = useRef<Map<string, string>>(new Map());
+  const previousAnimationKey = useRef<number | null>(null);
+  const previousArrowSignatures = useRef<
+    Map<string, { pointerValue: number | null; targetValue: number | null }>
+  >(new Map());
   const cellsByAddress = new Map(
     memory.cells.map((cell) => [cell.address, cell]),
   );
+  const isMovingBackward = previousAnimationKey.current !== null &&
+    animationKey < previousAnimationKey.current;
   const arrows: Array<{
     id: string;
-    signature: string;
+    pointerValue: number | null;
+    targetValue: number | null;
     animate: boolean;
     source: { x: number; y: number };
     target: { x: number; y: number };
@@ -39,16 +49,20 @@ export function SvgArrowLayer({
       const id = `${source.address}->${targetAddress}`;
       const sourceCell = cellsByAddress.get(source.address);
       const targetCell = cellsByAddress.get(targetAddress);
-      const signature = [
-        id,
-        sourceCell?.value ?? "null",
-        targetCell?.value ?? "null",
-      ].join(":");
+      const previousSignature = previousArrowSignatures.current.get(id);
+      const pointerValue = sourceCell?.value ?? null;
+      const targetValue = targetCell?.value ?? null;
+      const animate = previousSignature === undefined ||
+        previousSignature.pointerValue !== pointerValue ||
+        (isMovingBackward && sourceCell?.name === activePointerName) ||
+        (animateTargetUpdates && sourceCell?.name === activePointerName &&
+          previousSignature.targetValue !== targetValue);
 
       arrows.push({
         id,
-        signature,
-        animate: previousArrowSignatures.current.get(id) !== signature,
+        pointerValue,
+        targetValue,
+        animate,
         source: {
           x: pointsRight ? source.rect.right : source.rect.left,
           y: source.rect.centerY,
@@ -104,9 +118,18 @@ export function SvgArrowLayer({
     }
 
     previousArrowSignatures.current = new Map(
-      arrows.map((arrow) => [arrow.id, arrow.signature]),
+      arrows.map((arrow) => [arrow.id, {
+        pointerValue: arrow.pointerValue,
+        targetValue: arrow.targetValue,
+      }]),
     );
-  }, [animationKey, positions]);
+    previousAnimationKey.current = animationKey;
+  }, [
+    activePointerName,
+    animationKey,
+    animateTargetUpdates,
+    positions,
+  ]);
 
   return (
     <svg className="memory-arrows" aria-hidden="true">

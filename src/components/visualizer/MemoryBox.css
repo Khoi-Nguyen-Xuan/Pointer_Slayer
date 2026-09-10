@@ -6,6 +6,12 @@
     font-size: 15px;
 }
 
+.memory-box-highlighted{
+    border-color: #fbbf24;
+    background: rgba(251, 191, 36, 0.16);
+    box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.24), 0 0 18px rgba(251, 191, 36, 0.2);
+}
+
 .memory-box dl{
     display: flex;
     flex-direction: column;
