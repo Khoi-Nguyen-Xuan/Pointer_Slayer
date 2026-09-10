@@ -59,6 +59,7 @@ export function MemoryVisualizer({
         <SvgArrowLayer
           positions={positions}
           animationKey={animationKey}
+          memory={memory}
         />
       </div>
     </section>

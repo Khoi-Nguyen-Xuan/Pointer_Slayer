@@ -1,4 +1,4 @@
-import type { ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 
 import "./StepSlider.css";
 
@@ -16,11 +16,32 @@ export function StepSlider({
   const hasSteps = totalSteps > 0;
 
   const maxStepIndex = hasSteps ? totalSteps - 1 : 0;
+  const currentPercent = maxStepIndex === 0
+    ? 0
+    : currentStepIndex / maxStepIndex * 100;
+  const [sliderPercent, setSliderPercent] = useState(currentPercent);
+  const isInteracting = useRef(false);
+
+  useEffect(() => {
+    if (!isInteracting.current) {
+      setSliderPercent(currentPercent);
+    }
+  }, [currentPercent]);
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const nextStepIndex = Number(event.target.value);
+    const nextPercent = Number(event.target.value);
 
-    onStepChange(nextStepIndex);
+    isInteracting.current = true;
+    setSliderPercent(nextPercent);
+
+    onStepChange(
+      Math.round(nextPercent / 100 * maxStepIndex),
+    );
+  };
+
+  const endInteraction = () => {
+    isInteracting.current = false;
+    setSliderPercent(currentPercent);
   };
 
   return (
@@ -33,14 +54,23 @@ export function StepSlider({
         id="simulation-step-slider"
         type="range"
         min={0}
-        max={maxStepIndex}
-        step={1}
-        value={hasSteps ? currentStepIndex : 0}
+        max={100}
+        step={0.1}
+        value={hasSteps ? sliderPercent : 0}
         onChange={handleChange}
+        onPointerDown={() => {
+          isInteracting.current = true;
+        }}
+        onKeyDown={() => {
+          isInteracting.current = true;
+        }}
+        onPointerUp={endInteraction}
+        onKeyUp={endInteraction}
+        onBlur={endInteraction}
         disabled={!hasSteps}
-        aria-valuemin={hasSteps ? 1 : 0}
-        aria-valuemax={totalSteps}
-        aria-valuenow={hasSteps ? currentStepIndex + 1 : 0}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={hasSteps ? Math.round(sliderPercent) : 0}
         aria-valuetext={
           hasSteps
             ? `Step ${currentStepIndex + 1} of ${totalSteps}`

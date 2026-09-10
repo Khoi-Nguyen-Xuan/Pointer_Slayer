@@ -7,10 +7,11 @@ main{
     gap: 50px;
     min-height: 100svh;
     box-sizing: border-box;
-    background:
-        radial-gradient(circle at 12% 8%, var(--accent-bg), transparent 32%),
-        radial-gradient(circle at 88% 78%, rgba(56, 189, 248, 0.08), transparent 34%),
-        linear-gradient(135deg, var(--bg), #11131c 55%, var(--bg));
+    background-color: #0b1120;
+    background-image:
+        linear-gradient(rgba(148, 163, 184, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.035) 1px, transparent 1px);
+    background-size: 32px 32px;
 }
 
 .header{
