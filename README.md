@@ -2,11 +2,11 @@
 
 **An interactive C pointer and memory visualizer built with React and TypeScript.**
 
-Pointer Slayer is an educational web application designed to help students understand one of the most challenging concepts in introductory C programming: **pointers and memory**.
+Pointer Slayer is an educational web application designed to help students that I'm TAing in CMPUT 201 (Practical Programming Methodology) understand one of the most challenging concepts in introductory C programming: **pointers and memory**.
 
 Instead of simply showing the output of a C program, Pointer Slayer parses a supported subset of C code, simulates its execution entirely in the browser, and visualizes how variables, memory addresses, and pointers change **step by step**.
 
-The project was originally inspired by the difficulty students often face when trying to mentally trace pointer assignments such as:
+The project was inspired by the difficulty I often face when trying to mentally trace pointer assignments such as:
 
 ```c
 int x = 5;
@@ -14,10 +14,9 @@ int *p = &x;
 *p = 10;
 ```
 
-Pointer Slayer turns code like this into an interactive memory visualization showing variables, addresses, values, and pointer relationships.
+Pointer Slayer turns code like this into an interactive visualization showing variables, addresses, values, and pointer relationships.
 
-> Pointer Slayer is intentionally **not a compiler or IDE**. It is a lightweight educational simulator focused specifically on helping students build intuition about C memory and pointers.
-
+> Pointer Slayer is intentionally **not a compiler or IDE**. 
 ---
 
 ## Demo
@@ -164,7 +163,7 @@ int *p = &x;
 *p = 20;
 ```
 
-Pointer Slayer processes the program in several stages.
+Pointer Slayer processes the program in 4 main stages.
 
 ## 1. Parsing
 
@@ -176,7 +175,7 @@ Conceptually:
 int x = 5;
 ```
 
-becomes something similar to:
+becomes:
 
 ```ts
 {
@@ -186,15 +185,23 @@ becomes something similar to:
 }
 ```
 
-while:
+Or
 
 ```text
 int *p = &x;
 ```
+becomes:
 
+```ts
+{
+  type: "pointerDeclaration",
+  name: "p",
+  target: x
+}
+```
 becomes a pointer declaration referencing `x`.
 
-This creates a clean boundary between **source-code syntax** and **execution logic**.
+This creates a clean boundary between ** C syntax** and **execution logic**.
 
 ---
 
@@ -230,7 +237,7 @@ Because every state is preserved, the UI can move both forward and backward thro
 
 The simulator represents memory using structured TypeScript models instead of directly coupling program state to UI elements.
 
-A memory state contains a collection of memory cells:
+A memory state contains an array of memory cells:
 
 ```ts
 interface MemoryState {
@@ -238,11 +245,10 @@ interface MemoryState {
 }
 ```
 
-Each memory cell contains the information required to represent a variable, including its simulated address and value.
+Each memory cell contains the information required to represent a variable, including the simulated address and value.
 
 Pointer variables store references to other memory locations.
 
-This model provides a single source of truth for the visualization.
 
 ---
 
@@ -252,15 +258,10 @@ React receives the current `MemoryState` and renders it as memory boxes.
 
 Pointer relationships are displayed using an SVG arrow layer positioned between the corresponding DOM elements.
 
-The UI therefore behaves as a visualization of the simulation engine rather than implementing execution logic itself.
-
-This architecture keeps the visualization reusable and makes future extensions to the simulator significantly easier.
 
 ---
 
 # Project Architecture
-
-A simplified version of the project structure:
 
 ```text
 src/
@@ -300,15 +301,13 @@ src/
 └── App.tsx
 ```
 
-The project is intentionally organized around **separation of concerns**.
-
 ---
 
 # Core Modules
 
 ## Parser
 
-The parser is responsible for translating supported C syntax into strongly typed internal statements.
+The parser is responsible for translating supported C syntax into typed internal statements.
 
 Responsibilities include:
 
@@ -471,30 +470,6 @@ int *p = &x;
 
 ---
 
-# Current Scope
-
-Pointer Slayer focuses specifically on the pointer concepts commonly introduced in an introductory C programming course.
-
-The current MVP does not attempt to support the entire C language.
-
-Features intentionally outside the current scope include:
-
-```text
-arrays
-structs
-malloc / free
-pointer arithmetic
-double pointers
-functions
-loops
-conditionals
-full C expression evaluation
-```
-
-This constrained scope allows the application to provide predictable visualizations without requiring a complete C compiler or interpreter.
-
----
-
 # Technology Stack
 
 ### Frontend
@@ -534,18 +509,6 @@ Parser tests:     16
 Simulator tests:  19
 ────────────────────
 Total:            35
-```
-
-Tests cover operations such as:
-
-```c
-int x;
-int x = 5;
-int *p;
-int *p = &x;
-x = 10;
-p = &x;
-*p = 20;
 ```
 
 Testing the execution engine separately from the interface makes it easier to safely extend the supported language.
@@ -606,6 +569,5 @@ npm run build
 
 **Khoi Nguyen Xuan**
 
-Computer Science student at the University of Alberta.
 
 GitHub: [Khoi-Nguyen-Xuan](https://github.com/Khoi-Nguyen-Xuan)
