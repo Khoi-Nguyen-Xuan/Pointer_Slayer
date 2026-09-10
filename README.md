@@ -11,11 +11,11 @@
 
 ---
 
-Pointer Slayer is an educational web application designed to help students that I'm TAing in CMPUT 201 (Practical Programming Methodology) understand one of the most challenging concepts in introductory C programming: **pointers and memory**.
+Pointer Slayer is an educational web application designed to help students that I'm TAing in CMPUT 201 (Practical Programming Methodology) understand one of the most challenging concepts (at least for me) in C programming: **pointers and memory**.
 
 Instead of simply showing the output of a C program, Pointer Slayer parses a supported subset of C code, simulates its execution entirely in the browser, and visualizes how variables, memory addresses, and pointers change **step by step**.
 
-The project was inspired by the difficulty I often face when trying to mentally trace pointer assignments such as:
+The project was inspired by the difficulty I often face when trying to trace pointer assignments such as:
 
 ```c
 int x = 5;
@@ -23,13 +23,13 @@ int *p = &x;
 *p = 10;
 ```
 
-Pointer Slayer turns code like this into an interactive visualization showing variables, addresses, values, and pointer relationships.
+Pointer Slayer turns C program like this into an interactive visualization showing variables, addresses, values, and pointer relationships.
 
 > Pointer Slayer is intentionally **not a compiler or IDE**. 
 ---
 
 
-# Features
+# Main Features
 
 ### Interactive C Code Editor
 
@@ -103,7 +103,6 @@ Users can inspect execution using:
 * simulation timeline / slider
 * highlighted active source line
 
-This makes it possible to trace a program at the same pace that a student would trace it manually.
 
 ---
 
@@ -146,8 +145,6 @@ Pointer Slayer separates the application into three primary layers:
 
 This separation keeps parsing, program execution, and visualization independent from each other.
 
-The React components therefore do **not** need to understand C syntax directly. They simply render the simulation state produced by the engine.
-
 ---
 
 # How the Simulation Pipeline Works
@@ -166,7 +163,7 @@ Pointer Slayer processes the program in 4 main stages.
 
 The parser converts source lines into structured statements.
 
-Conceptually:
+For example, this line of C code:
 
 ```text
 int x = 5;
@@ -182,7 +179,7 @@ becomes:
 }
 ```
 
-Or
+Or this 
 
 ```text
 int *p = &x;
@@ -196,7 +193,6 @@ becomes:
   target: x
 }
 ```
-becomes a pointer declaration referencing `x`.
 
 This creates a clean boundary between ** C syntax** and **execution logic**.
 
@@ -254,7 +250,6 @@ Pointer variables store references to other memory locations.
 React receives the current `MemoryState` and renders it as memory boxes.
 
 Pointer relationships are displayed using an SVG arrow layer positioned between the corresponding DOM elements.
-
 
 ---
 
@@ -421,7 +416,7 @@ This keeps DOM measurement logic separate from memory simulation logic.
 
 # Supported C Syntax
 
-The current version intentionally supports a focused subset of C.
+The current version only supports a subset of C.
 
 ### Integer declarations
 
@@ -507,8 +502,6 @@ Simulator tests:  19
 ────────────────────
 Total:            35
 ```
-
-Testing the execution engine separately from the interface makes it easier to safely extend the supported language.
 
 Run the test suite with:
 
