@@ -1,6 +1,6 @@
-# Pointer Slayer
+# Pointer Slayer 
 
-**An interactive C pointer and memory visualizer built with React and TypeScript.**
+**An interactive <img width="1920" height="2123" alt="image" src="https://github.com/user-attachments/assets/5f5fb7f7-12c9-4318-b5de-1a83bab2f3e7" /> pointer and memory visualizer built with React and TypeScript.**
 
 
 ## Demo
