@@ -7,8 +7,6 @@
 
 **Live Demo:** https://pointer-slayer.netlify.app/
 
-**Repository:** https://github.com/Khoi-Nguyen-Xuan/Pointer_Slayer
-
 ---
 
 Pointer Slayer is an educational web application designed to help students that I'm TAing in CMPUT 201 (Practical Programming Methodology) understand one of the most challenging concepts (at least for me) in C programming: **pointers and memory**.
