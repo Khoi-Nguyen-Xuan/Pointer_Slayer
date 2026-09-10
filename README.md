@@ -26,6 +26,53 @@ Pointer Slayer turns C program like this into an interactive visualization showi
 > Pointer Slayer is intentionally **not a compiler or IDE**. 
 ---
 
+# Supported C Syntax
+
+The current version only supports a subset of C.
+
+### Integer declarations
+
+```c
+int x;
+int x = 5;
+```
+
+### Pointer declarations
+
+```c
+int *p;
+int *p = &x;
+```
+
+### Variable assignments
+
+```c
+x = 10;
+```
+
+### Pointer assignments
+
+```c
+p = &x;
+```
+
+### Pointer dereferencing
+
+```c
+*p = 20;
+```
+
+### Comments and whitespace
+
+```c
+// Pointer example
+
+int x = 5;
+
+int *p = &x;
+```
+
+---
 
 # Main Features
 
@@ -412,54 +459,6 @@ This keeps DOM measurement logic separate from memory simulation logic.
 
 ---
 
-# Supported C Syntax
-
-The current version only supports a subset of C.
-
-### Integer declarations
-
-```c
-int x;
-int x = 5;
-```
-
-### Pointer declarations
-
-```c
-int *p;
-int *p = &x;
-```
-
-### Variable assignments
-
-```c
-x = 10;
-```
-
-### Pointer assignments
-
-```c
-p = &x;
-```
-
-### Pointer dereferencing
-
-```c
-*p = 20;
-```
-
-### Comments and whitespace
-
-```c
-// Pointer example
-
-int x = 5;
-
-int *p = &x;
-```
-
----
-
 # Technology Stack
 
 ### Frontend
@@ -535,7 +534,7 @@ Start the Vite development server:
 npm run dev
 ```
 
-Then open the local URL displayed by Vite, typically:
+Then open the local URL displayed by Vite, like:
 
 ```text
 http://localhost:5173
