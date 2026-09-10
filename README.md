@@ -5,7 +5,7 @@
 
 ## Demo
 
-**Live Demo:** https://pointer-slayer.netlify.app/
+🔴 **Live Demo:** https://pointer-slayer.netlify.app/
 
 ---
 
