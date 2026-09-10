@@ -10,11 +10,17 @@ import "./MemoryVisualizer.css";
 interface MemoryVisualizerProps {
   memory: MemoryState | null;
   animationKey: number;
+  animateTargetUpdates: boolean;
+  activePointerName: string | null;
+  highlightedVariableNames: ReadonlySet<string>;
 }
 
 export function MemoryVisualizer({
   memory,
   animationKey,
+  animateTargetUpdates,
+  activePointerName,
+  highlightedVariableNames,
 }: MemoryVisualizerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const positions = useElementPositions(containerRef, memory);
@@ -43,7 +49,11 @@ export function MemoryVisualizer({
             {memory.cells
               .filter((cell) => cell.dataType === "int")
               .map((cell) => (
-                <MemoryBox key={cell.address} cell={cell} />
+                <MemoryBox
+                  key={cell.address}
+                  cell={cell}
+                  isHighlighted={highlightedVariableNames.has(cell.name)}
+                />
               ))}
           </div>
 
@@ -51,7 +61,11 @@ export function MemoryVisualizer({
             {memory.cells
               .filter((cell) => cell.dataType === "int_pointer")
               .map((cell) => (
-                <MemoryBox key={cell.address} cell={cell} />
+                <MemoryBox
+                  key={cell.address}
+                  cell={cell}
+                  isHighlighted={highlightedVariableNames.has(cell.name)}
+                />
               ))}
           </div>
         </div>
@@ -60,6 +74,8 @@ export function MemoryVisualizer({
           positions={positions}
           animationKey={animationKey}
           memory={memory}
+          animateTargetUpdates={animateTargetUpdates}
+          activePointerName={activePointerName}
         />
       </div>
     </section>

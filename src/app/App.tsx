@@ -34,6 +34,14 @@ export function App() {
     goToStep,
   } = useStepNavigation(steps);
 
+  const activePointerName = currentStep === null
+    ? null
+    : currentStep.statement.type === "pointer_declaration"
+      ? currentStep.statement.name
+      : "pointerName" in currentStep.statement
+        ? currentStep.statement.pointerName
+        : null;
+
   return (
     <main>
       <header>
@@ -86,6 +94,15 @@ export function App() {
         <MemoryVisualizer
           memory={currentStep?.memory ?? null}
           animationKey={currentStepIndex}
+          animateTargetUpdates={
+            currentStep?.statement.type === "dereference_assignment"
+          }
+          activePointerName={activePointerName}
+          highlightedVariableNames={new Set(
+            currentStep?.changes
+              .filter((change) => change.type === "value_changed")
+              .map((change) => change.variableName) ?? [],
+          )}
         />
       </div>
 
