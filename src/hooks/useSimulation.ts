@@ -8,7 +8,7 @@ import type {
 } from "../models/simulation";
 
 interface UseSimulationResult {
-  simulation: SimulationResult | null;
+  simulation: SimulationResult | null; /* SimulationResult is an array of Step */ 
   steps: SimulationStep[];
   error: string | null;
   hasError: boolean;
@@ -24,6 +24,7 @@ function getErrorMessage(error: unknown): string {
   return "An unknown simulation error occurred.";
 }
 
+/* code string is C source code */ 
 export function useSimulation(code: string): UseSimulationResult {
   return useMemo(() => {
     try {

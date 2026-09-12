@@ -129,15 +129,30 @@ Flow:
 
 C source code
      ↓
-parser.ts
+parser.ts (code => Statement)
      ↓
 ParsedStatement[]
      ↓
 simulator.ts
      ↓
-executeStatement.ts
+executeStatement.ts (Statement + MemoryState => New MemoryState)
      ↓
 MemoryState
      ↓
-SimulationStep[]
+SimulationStep[] (!!!!!!!!!!!!!)
+*/
+
+/*
+
+C source code: 
+int x = 5;
+int *p = &x;
+*p = 20;
+
+
+SimulationStep[]: [Step 1, Step 2, Step 3]
+
+Step 1 => Memory state = [MemoryCell của line code thứ 1]
+Step 2 => Memory state = [MemoryCell của line code thứ 1, MemoryCell của line code thứ 2]
+Step 3 => Memory state = [MemoryCell của line code thứ 1, MemoryCell của line code thứ 2] (giá trị của MemoryCell của line code thứ 1 đã bị thay đổi) 
 */
