@@ -1,4 +1,4 @@
-main{
+main {
     padding: 20px 30px;
     display: flex;
     flex-direction: column;
@@ -14,11 +14,17 @@ main{
     background-size: 32px 32px;
 }
 
-.header{
+.header {
     color: var(--header);
+    text-align: center;
 }
 
-.controls-container{
+header {
+    position: relative;
+    width: 100%;
+}
+
+.controls-container {
     display: flex;
     flex-direction: row;
     gap: 20px;
@@ -27,7 +33,7 @@ main{
     width: 100%;
 }
 
-.step-controls-container{
+.step-controls-container {
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -36,7 +42,7 @@ main{
     width: 100%;
 }
 
-.editor-visualizer-container{
+.editor-visualizer-container {
     display: flex;
     flex-direction: row;
     position: relative;
@@ -45,7 +51,7 @@ main{
     width: 100%;
 }
 
-.editor-visualizer-container > div:first-child{
+.editor-visualizer-container>div:first-child {
     width: 50%;
     flex: 0 1 50%;
     text-align: left;
@@ -54,23 +60,52 @@ main{
     gap: 16px;
 }
 
-.editor-visualizer-container > section:last-child{
+.editor-visualizer-container>section:last-child {
     width: 45%;
     flex: 0 1 45%;
     text-align: left;
     min-width: 450px;
 }
 
-@media (max-width: 900px){
-    .editor-visualizer-container{
+@media (max-width: 900px) {
+    .editor-visualizer-container {
         flex-direction: column;
         align-items: stretch;
     }
 
-    .editor-visualizer-container > div:first-child,
-    .editor-visualizer-container > section:last-child{
+    .editor-visualizer-container>div:first-child,
+    .editor-visualizer-container>section:last-child {
         width: 100%;
         min-width: 0;
         flex: 1 1 auto;
     }
+}
+
+.header-image {
+    position: absolute;
+    top: 50%;
+    left: calc(50% + 220px);
+    transform: translateY(-45%);
+    width: 180px;
+    height: 180px;
+}
+
+.nezuko-image {
+    position: absolute;
+    right: 0;
+    top: -20px;
+    width: 230px;
+    height: auto;
+    transform: scaleX(-1);
+
+}
+
+.box-image {
+    position: absolute;
+    top: -70px;
+    left: -100px;
+    width: 230px;
+    height: auto;
+    transform: scaleX(-1);
+
 }

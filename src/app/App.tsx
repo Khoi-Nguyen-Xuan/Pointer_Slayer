@@ -45,7 +45,25 @@ export function App() {
   return (
     <main>
       <header>
-        <h1 className="header">Pointer Slayer</h1>
+        <div>
+          <h1 className="header">Pointer Slayer</h1>
+          <div className="header-image">
+            <img
+              src="/images/nezuko.png"
+              alt="Pointer Slayer Logo"
+              width={200}
+              height={200}
+              className="nezuko-image"
+              />
+            <img
+              src="/images/box.png"
+              alt="Pointer Slayer Logo"
+              width={200}
+              height={200}
+              className="box-image"
+            />
+          </div>
+        </div>
         <p>Visualize C pointers and memory step by step.</p>
       </header>
 
