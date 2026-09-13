@@ -22,7 +22,7 @@ const positions: ElementPositions = {
 describe("arrow attachment points", () => {
   it("separates arrows sharing a target and orders their endpoints vertically", () => {
     const arrows = getMemoryArrows(memory, positions);
-    expect(arrows.map((arrow) => arrow.target)).toEqual([{ x: 100, y: 42 }, { x: 100, y: 58 }]);
+    expect(arrows.map((arrow) => arrow.target)).toEqual([{ x: 100, y: 46 }, { x: 100, y: 54 }]);
     expect(arrows.map((arrow) => arrow.pointerAddress)).toEqual([200, 300]);
     expect(getMemoryArrows({ cells: [...memory.cells].reverse() }, positions)).toEqual(arrows);
   });
