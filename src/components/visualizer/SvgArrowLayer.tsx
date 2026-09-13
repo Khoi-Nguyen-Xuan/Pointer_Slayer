@@ -1,141 +1,106 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import type { ElementPositions } from "../../hooks/useElementPositions";
-import type { MemoryState } from "../../models/memory";
+import type { SimulationStep } from "../../models/simulation";
+import { ARROW_ANIMATION_MS, getMemoryArrows } from "./memoryArrows";
 
 interface SvgArrowLayerProps {
   positions: ElementPositions;
-  animationKey: number;
-  memory: MemoryState;
-  animateTargetUpdates: boolean;
-  activePointerName: string | null;
+  step: SimulationStep;
+  arrowPath: readonly number[];
+  onAnimationComplete: () => void;
 }
 
 export function SvgArrowLayer({
   positions,
-  animationKey,
-  memory,
-  animateTargetUpdates,
-  activePointerName,
+  step,
+  arrowPath,
+  onAnimationComplete,
 }: SvgArrowLayerProps) {
   const arrowRefs = useRef<Map<string, SVGGElement>>(new Map());
-  const arrowheadRefs = useRef<Map<string, SVGPathElement>>(new Map());
-  const previousAnimationKey = useRef<number | null>(null);
-  const previousArrowSignatures = useRef<
-    Map<string, { pointerValue: number | null; targetValue: number | null }>
-  >(new Map());
-  const cellsByAddress = new Map(
-    memory.cells.map((cell) => [cell.address, cell]),
+  const progress = useRef<{ step: SimulationStep; nextArrow: number } | null>(null);
+  const arrows = useMemo(
+    () => getMemoryArrows(step.memory, positions),
+    [step.memory, positions],
   );
-  const isMovingBackward = previousAnimationKey.current !== null &&
-    animationKey < previousAnimationKey.current;
-  const arrows: Array<{
-    id: string;
-    pointerValue: number | null;
-    targetValue: number | null;
-    animate: boolean;
-    source: { x: number; y: number };
-    target: { x: number; y: number };
-  }> = [];
-
-  for (const [targetAddress, sources] of positions.pointerSources) {
-    const target = positions.memoryTargets.get(targetAddress);
-    if (target === undefined) {
-      continue;
-    }
-
-    for (const source of sources) {
-      const pointsRight = source.rect.centerX < target.centerX;
-      const id = `${source.address}->${targetAddress}`;
-      const sourceCell = cellsByAddress.get(source.address);
-      const targetCell = cellsByAddress.get(targetAddress);
-      const previousSignature = previousArrowSignatures.current.get(id);
-      const pointerValue = sourceCell?.value ?? null;
-      const targetValue = targetCell?.value ?? null;
-      const animate = previousSignature === undefined ||
-        previousSignature.pointerValue !== pointerValue ||
-        (isMovingBackward && sourceCell?.name === activePointerName) ||
-        (animateTargetUpdates && sourceCell?.name === activePointerName &&
-          previousSignature.targetValue !== targetValue);
-
-      arrows.push({
-        id,
-        pointerValue,
-        targetValue,
-        animate,
-        source: {
-          x: pointsRight ? source.rect.right : source.rect.left,
-          y: source.rect.centerY,
-        },
-        target: {
-          x: pointsRight ? target.left : target.right,
-          y: target.centerY,
-        },
-      });
-    }
-  }
 
   useEffect(() => {
-    for (const arrow of arrows) {
-      if (!arrow.animate) {
-        continue;
-      }
+    if (arrowPath.length === 0) return;
+    if (progress.current?.step !== step) {
+      progress.current = { step, nextArrow: 0 };
+    }
+    const currentProgress = progress.current;
 
-      const id = arrow.id;
-      const group = arrowRefs.current.get(id);
-      const animations = Array.from(
-        group?.querySelectorAll("animate") ?? [],
-      ) as SVGAnimationElement[];
+    // The measurement hook may not have supplied all the boxes yet.
+    if (!arrowPath.every((address) => arrows.some((arrow) => arrow.pointerAddress === address))) {
+      return;
+    }
 
-      for (const animation of animations) {
-        animation.beginElement();
-      }
+    let cancelled = false;
+    const animations: Animation[] = [];
+    const activeGroups: SVGGElement[] = [];
+    const duration = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? 0
+      : ARROW_ANIMATION_MS;
 
-      const arrowhead = arrowheadRefs.current.get(id);
+    const replayPath = async () => {
+      for (let index = currentProgress.nextArrow; index < arrowPath.length; index += 1) {
+        const arrow = arrows.find((candidate) => candidate.pointerAddress === arrowPath[index]);
+        if (!arrow || cancelled) return;
+        const group = arrowRefs.current.get(arrow.id);
+        const line = group?.querySelector("line");
+        const arrowhead = group?.querySelector("path");
+        if (!group || !line || !arrowhead) return;
 
-      if (arrowhead !== undefined) {
         const angle = Math.atan2(
           arrow.target.y - arrow.source.y,
           arrow.target.x - arrow.source.x,
         ) * 180 / Math.PI;
+        group.dataset.animating = "true";
+        activeGroups.push(group);
 
-        arrowhead.animate(
-          [
-            {
-              transform: `translate(${arrow.source.x}px, ${arrow.source.y}px) rotate(${angle}deg)`,
-            },
-            {
-              transform: `translate(${arrow.target.x}px, ${arrow.target.y}px) rotate(${angle}deg)`,
-            },
-          ],
-          {
-            duration: 700,
-            easing: "linear",
-            fill: "forwards",
-          },
+        const lineAnimation = line.animate(
+          [{ strokeDasharray: "0 1" }, { strokeDasharray: "1 0" }],
+          { duration, easing: "linear" },
         );
-      }
-    }
+        const headAnimation = arrowhead.animate(
+          [
+            { transform: `translate(${arrow.source.x}px, ${arrow.source.y}px) rotate(${angle}deg)` },
+            { transform: `translate(${arrow.target.x}px, ${arrow.target.y}px) rotate(${angle}deg)` },
+          ],
+          { duration, easing: "linear" },
+        );
+        animations.push(lineAnimation, headAnimation);
 
-    previousArrowSignatures.current = new Map(
-      arrows.map((arrow) => [arrow.id, {
-        pointerValue: arrow.pointerValue,
-        targetValue: arrow.targetValue,
-      }]),
-    );
-    previousAnimationKey.current = animationKey;
-  }, [
-    activePointerName,
-    animationKey,
-    animateTargetUpdates,
-    positions,
-  ]);
+        try {
+          await Promise.all([lineAnimation.finished, headAnimation.finished]);
+        } catch {
+          // Navigation, editing, or resizing cancels the active animation.
+          return;
+        }
+        if (cancelled) return;
+        delete group.dataset.animating;
+        currentProgress.nextArrow = index + 1;
+      }
+
+      if (!cancelled) onAnimationComplete();
+    };
+
+    void replayPath();
+
+    return () => {
+      cancelled = true;
+      for (const animation of animations) animation.cancel();
+      for (const group of activeGroups) delete group.dataset.animating;
+    };
+  }, [step, arrows, arrowPath, onAnimationComplete]);
 
   return (
     <svg className="memory-arrows" aria-hidden="true">
       {arrows.map((arrow) => (
         <g
           key={arrow.id}
+          data-pointer-address={arrow.pointerAddress}
           ref={(group) => {
             if (group === null) {
               arrowRefs.current.delete(arrow.id);
@@ -146,51 +111,20 @@ export function SvgArrowLayer({
         >
           <line
             pathLength={1}
-            strokeDasharray={arrow.animate ? "0 1" : "1 0"}
+            strokeDasharray="1 0"
             x1={arrow.source.x}
             x2={arrow.target.x}
             y1={arrow.source.y}
             y2={arrow.target.y}
-          >
-            <animate
-              attributeName="stroke-dasharray"
-              begin="indefinite"
-              dur="700ms"
-              fill="freeze"
-              from="0 1"
-              to="1 0"
-            />
-          </line>
-
-          {arrow.animate ? (
-            <path
-              className="memory-arrowhead"
-              d="M -5 -3 L 0 0 L -5 3 Z"
-              ref={(path) => {
-                if (path === null) {
-                  arrowheadRefs.current.delete(arrow.id);
-                } else {
-                  arrowheadRefs.current.set(arrow.id, path);
-                }
-              }}
-              style={{
-                transform: `translate(${arrow.source.x}px, ${arrow.source.y}px) rotate(${Math.atan2(
-                  arrow.target.y - arrow.source.y,
-                  arrow.target.x - arrow.source.x,
-                ) * 180 / Math.PI}deg)`,
-              }}
-            >
-            </path>
-          ) : (
-            <path
-              className="memory-arrowhead"
-              d="M -5 -3 L 0 0 L -5 3 Z"
-              transform={`translate(${arrow.target.x} ${arrow.target.y}) rotate(${Math.atan2(
-                arrow.target.y - arrow.source.y,
-                arrow.target.x - arrow.source.x,
-              ) * 180 / Math.PI})`}
-            />
-          )}
+          />
+          <path
+            className="memory-arrowhead"
+            d="M -5 -3 L 0 0 L -5 3 Z"
+            transform={`translate(${arrow.target.x} ${arrow.target.y}) rotate(${Math.atan2(
+              arrow.target.y - arrow.source.y,
+              arrow.target.x - arrow.source.x,
+            ) * 180 / Math.PI})`}
+          />
         </g>
       ))}
     </svg>

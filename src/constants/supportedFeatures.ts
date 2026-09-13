@@ -17,7 +17,7 @@ export const SUPPORTED_FEATURES = {
   malloc: false,
   free: false,
   pointerArithmetic: false,
-  doublePointers: false,
+  doublePointers: true,
   functionCalls: false,
   conditionals: false,
   loops: false,

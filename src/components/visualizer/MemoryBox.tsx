@@ -8,35 +8,33 @@ import "./MemoryBox.css";
 interface MemoryBoxProps {
   cell: MemoryCell;
   isHighlighted?: boolean;
+  displayValue?: number | null;
 }
 
-function formatDataType(dataType: MemoryCell["dataType"]): string {
-  switch (dataType) {
-    case "int":
-      return "int";
-
-    case "int_pointer":
-      return "int *";
-  }
+function formatDataType(cell: MemoryCell): string {
+  return cell.pointerDepth === 0
+    ? cell.baseType
+    : `${cell.baseType} ${"*".repeat(cell.pointerDepth)}`;
 }
 
-function formatValue(cell: MemoryCell): string {
-  if (cell.value === null) {
+function formatValue(cell: MemoryCell, value: number | null): string {
+  if (value === null) {
     return "uninitialized";
   }
 
-  if (cell.dataType === "int_pointer") {
-    return formatAddress(cell.value);
+  if (cell.pointerDepth > 0) {
+    return formatAddress(value);
   }
 
-  return String(cell.value);
+  return String(value);
 }
 
 export function MemoryBox({
   cell,
   isHighlighted = false,
+  displayValue = cell.value,
 }: MemoryBoxProps) {
-  const isPointer = cell.dataType === "int_pointer";
+  const isPointer = cell.pointerDepth > 0;
   const pointerTarget = isPointer
     ? typeof cell.value === "number"
       ? cell.value
@@ -47,12 +45,13 @@ export function MemoryBox({
     <article
       className={`memory-box${isHighlighted ? " memory-box-highlighted" : ""}`}
       data-memory-cell-address={cell.address}
-      data-memory-cell-type={cell.dataType}
+      data-memory-cell-type={formatDataType(cell)}
+      data-pointer-depth={cell.pointerDepth}
       data-pointer-source={pointerTarget}
       aria-label={`Memory cell for ${cell.name}`}
     >
       <header>
-        <span><strong>{cell.name}</strong> {formatDataType(cell.dataType)}</span>
+        <span><strong>{cell.name}</strong> {formatDataType(cell)}</span>
       </header>
 
       <dl>
@@ -60,7 +59,7 @@ export function MemoryBox({
           <dt>Value</dt>
 
           <dd>
-            {formatValue(cell)}
+            {formatValue(cell, displayValue)}
           </dd>
         </div>
 

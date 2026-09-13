@@ -2,7 +2,7 @@ import type { MemoryCell, MemoryState } from "./memory";
 import type { Statement } from "./statement";
 
 /**
- * Define type of changes might happen during one simulation step.
+ * Define type of changes happen during one simulation step.
  */
 export type MemoryChange =
   | {
@@ -26,34 +26,22 @@ export type MemoryChange =
  * Represents the result of executing one line.
  */
 export interface SimulationStep {
-  /**
-   * Zero-based index of the EXECUTABLE statement.
-   */
+  // Index of this step in the simulation sequence.
   stepIndex: number;
 
-  /**
-   * Original source-code line number.
-   */
+  // Line number in the original source code.
   lineNumber: number;
 
-  /**
-   * Original C source line, e.g. "int x = 5;" or "int *p = &x;"
-   */
+  // Original source code line.
   sourceLine: string;
 
-  /**
-   * Structured representation produced by our parser.
-   */
+  // ParsedStatement being returned by parser
   statement: Statement;
 
-  /**
-   * Full memory snapshot AFTER this statement executes.
-   */
+  // Memory snapshot after executing this statement.
   memory: MemoryState;
 
-  /**
-   * Specific changes caused by this statement.
-   */
+  // Specific changes made to the memory during this step.
   changes: MemoryChange[];
 }
 

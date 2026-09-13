@@ -37,3 +37,19 @@
     color: #fff;
     text-align: center;
 }
+
+@media (max-width: 600px){
+    .step-controls{
+        gap: 8px;
+    }
+
+    .step-controls span{
+        min-width: 0;
+        flex: 1;
+    }
+
+    .step-controls button{
+        min-width: 0;
+        padding: 10px 12px;
+    }
+}
