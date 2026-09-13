@@ -46,7 +46,7 @@ export function getMemoryArrows(
     const spacing = sources.length < 2
       ? 0
       // Keep shared arrowheads close together without stacking them.
-      : Math.min(8, Math.max(0, target.height - 24) / (sources.length - 1));
+      : Math.min(4, Math.max(0, target.height - 24) / (sources.length - 1));
 
     sources.forEach((source, index) => {
       const offset = (index - (sources.length - 1) / 2) * spacing;
