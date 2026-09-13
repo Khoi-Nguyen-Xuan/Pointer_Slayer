@@ -1,83 +1,119 @@
-import { useRef } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import { useElementPositions } from "../../hooks/useElementPositions";
-import type { MemoryState } from "../../models/memory";
+import type { SimulationStep } from "../../models/simulation";
 import { MemoryBox } from "./MemoryBox";
 import { SvgArrowLayer } from "./SvgArrowLayer";
+import { getStepArrowPath } from "./memoryArrows";
 
 import "./MemoryVisualizer.css";
 
 interface MemoryVisualizerProps {
-  memory: MemoryState | null;
-  animationKey: number;
-  animateTargetUpdates: boolean;
-  activePointerName: string | null;
-  highlightedVariableNames: ReadonlySet<string>;
+  step: SimulationStep | null;
 }
 
-export function MemoryVisualizer({
-  memory,
-  animationKey,
-  animateTargetUpdates,
-  activePointerName,
-  highlightedVariableNames,
-}: MemoryVisualizerProps) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const positions = useElementPositions(containerRef, memory);
-
-  if (memory === null || memory.cells.length === 0) {
-    return (
-      <section aria-label="Memory visualization">
-        <header>
-          <h2>Memory</h2>
-        </header>
-
-        <p className="memory-visualizer">No variables in memory yet.</p>
-      </section>
-    );
-  }
-
+export function MemoryVisualizer({ step }: MemoryVisualizerProps) {
   return (
     <section aria-label="Memory visualization">
       <header>
         <h2>Memory</h2>
       </header>
 
-      <div className="memory-visualizer" ref={containerRef}>
-        <div className="memory-cells">
-          <div className="memory-column memory-variables">
-            {memory.cells
-              .filter((cell) => cell.dataType === "int")
-              .map((cell) => (
-                <MemoryBox
-                  key={cell.address}
-                  cell={cell}
-                  isHighlighted={highlightedVariableNames.has(cell.name)}
-                />
-              ))}
-          </div>
-
-          <div className="memory-column memory-pointers">
-            {memory.cells
-              .filter((cell) => cell.dataType === "int_pointer")
-              .map((cell) => (
-                <MemoryBox
-                  key={cell.address}
-                  cell={cell}
-                  isHighlighted={highlightedVariableNames.has(cell.name)}
-                />
-              ))}
-          </div>
+      {step === null || step.memory.cells.length === 0 ? (
+        <p className="memory-visualizer">No variables in memory yet.</p>
+      ) : (
+        <div className="memory-viewport" role="region" aria-label="Memory cells" tabIndex={0}>
+          <MemorySnapshot key={step.stepIndex} step={step} />
         </div>
-
-        <SvgArrowLayer
-          positions={positions}
-          animationKey={animationKey}
-          memory={memory}
-          animateTargetUpdates={animateTargetUpdates}
-          activePointerName={activePointerName}
-        />
-      </div>
+      )}
     </section>
+  );
+}
+
+/** Each selected step gets its own animation lifetime; the scroll viewport stays put. */
+function MemorySnapshot({ step }: { step: SimulationStep }) {
+  const memory = step.memory;
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const positions = useElementPositions(containerRef, memory);
+  const arrowPath = useMemo(() => getStepArrowPath(step), [step]);
+  const [completedStep, setCompletedStep] = useState<SimulationStep | null>(null);
+  const onAnimationComplete = useCallback(() => setCompletedStep(step), [step]);
+  const animationComplete = arrowPath.length === 0 || completedStep === step;
+  const hasDoublePointers = memory.cells.some((cell) => cell.pointerDepth === 2);
+  const highlightedVariableNames = new Set<string>();
+  const pendingValues = new Map<string, number | null>();
+
+  // Show the previous value while the pointer path runs, then reveal and highlight
+  // the new value. The simulator's memory snapshot is never modified for animation.
+  for (const change of step.changes) {
+    if (change.type === "value_changed") {
+      if (animationComplete) highlightedVariableNames.add(change.variableName);
+      else pendingValues.set(change.variableName, change.previousValue);
+    } else if (change.type === "pointer_changed") {
+      if (animationComplete) highlightedVariableNames.add(change.pointerName);
+      else pendingValues.set(change.pointerName, change.previousAddress);
+    }
+  }
+
+  return (
+    <div
+      className={`memory-visualizer${hasDoublePointers ? " has-double-pointers" : ""}`}
+      ref={containerRef}
+      data-animation-state={animationComplete ? "complete" : "running"}
+    >
+    <div className="memory-cells">
+      <div className="memory-column memory-variables">
+        <h3 className="memory-column-title">Integers</h3>
+        {memory.cells
+          .filter((cell) => cell.pointerDepth === 0)
+          .map((cell) => (
+            <MemoryBox
+              key={cell.address}
+              cell={cell}
+              isHighlighted={highlightedVariableNames.has(cell.name)}
+                  displayValue={pendingValues.has(cell.name) ? pendingValues.get(cell.name) : cell.value}
+            />
+          ))}
+      </div>
+
+      <div className="memory-column memory-pointers">
+        <h3 className="memory-column-title">Pointers</h3>
+        {memory.cells
+          .filter((cell) => cell.pointerDepth === 1)
+          .map((cell) => (
+            <MemoryBox
+              key={cell.address}
+              cell={cell}
+              isHighlighted={highlightedVariableNames.has(cell.name)}
+                  displayValue={pendingValues.has(cell.name) ? pendingValues.get(cell.name) : cell.value}
+            />
+          ))}
+      </div>
+
+      {hasDoublePointers && (
+        <div className="memory-column memory-double-pointers">
+          <h3 className="memory-column-title">Double pointers</h3>
+          {memory.cells
+            .filter((cell) => cell.pointerDepth === 2)
+            .map((cell) => (
+              <MemoryBox
+                key={cell.address}
+                cell={cell}
+                isHighlighted={highlightedVariableNames.has(cell.name)}
+                  displayValue={pendingValues.has(cell.name) ? pendingValues.get(cell.name) : cell.value}
+              />
+            ))}
+        </div>
+      )}
+    </div>
+
+
+      <SvgArrowLayer
+        positions={positions}
+        step={step}
+        arrowPath={arrowPath}
+        onAnimationComplete={onAnimationComplete}
+      />
+    </div>
   );
 }

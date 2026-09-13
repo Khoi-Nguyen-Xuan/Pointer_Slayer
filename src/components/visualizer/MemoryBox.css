@@ -4,6 +4,8 @@
     border-radius: 8px;
     background: var(--code-color);
     font-size: 15px;
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .memory-box-highlighted{
@@ -23,6 +25,7 @@
     display: flex;
     align-items: baseline;
     justify-content: space-between;
+    gap: 8px;
 }
 
 .memory-box dt{

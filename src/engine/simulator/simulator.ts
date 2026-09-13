@@ -13,8 +13,7 @@ import {
 } from "./executeStatement";
 
 /**
- * Error thrown when a simulation fails while executing
- * a specific source-code line.
+ * Error thrown when a simulation fails while executing a specific source-code line.
  */
 export class SimulationError extends Error {
   lineNumber: number;
@@ -46,48 +45,37 @@ function createInitialMemory(): MemoryState {
  * Simulate a list of parsed C statements.
  *
  * Input: ParsedStatement[]
- *
  * Output: SimulationResult containing one SimulationStep for every executable line.
  */
 export function simulateProgram(
   parsedStatements: ParsedStatement[],
 ): SimulationResult {
-  /**
-   * Every simulation gets a fresh allocator.
-   */
+  
+  //Every simulation gets a fresh allocator
   const addressAllocator = new AddressAllocator();
 
-  /**
-   * Memory starts empty.
-   */
+  //Memory starts empty
   let memory = createInitialMemory();
 
-  /**
-   * Every executed statement produces one step.
-   */
+  //Initialize an array to hold the steps
   const steps: SimulationStep[] = [];
 
+  //Parser.ts 
   parsedStatements.forEach((parsedStatement, index) => {
     try {
-      /**
-       * Execute exactly one statement using the current
-       * memory state.
-       */
+
+      //Execute one statement using the current memory state.
+      //result contains the new memory state and the changes made by this statement.
       const result = executeStatement(
         parsedStatement.statement,
         memory,
         addressAllocator,
       );
 
-      /**
-       * The returned memory becomes the current memory
-       * for the next statement.
-       */
+      //Update the memory state for the next statement
       memory = result.memory;
 
-      /**
-       * Save a complete snapshot for the UI.
-       */
+      //Save the step information for UI highlighting and animation.
       const step: SimulationStep = {
         stepIndex: index,
         lineNumber: parsedStatement.lineNumber,
@@ -99,10 +87,6 @@ export function simulateProgram(
 
       steps.push(step);
     } catch (error) {
-      /**
-       * Convert low-level execution errors into simulation
-       * errors that contain source-code information.
-       */
       if (error instanceof ExecutionError) {
         throw new SimulationError(
           error.message,
@@ -111,9 +95,6 @@ export function simulateProgram(
         );
       }
 
-      /**
-       * Do not hide unexpected programming bugs.
-       */
       throw error;
     }
   });
@@ -129,15 +110,15 @@ Flow:
 
 C source code
      ↓
-parser.ts
+parser.ts (code => Statement)
      ↓
 ParsedStatement[]
      ↓
 simulator.ts
      ↓
-executeStatement.ts
+executeStatement.ts (Statement + MemoryState => New MemoryState)
      ↓
 MemoryState
      ↓
-SimulationStep[]
+SimulationStep[] (!!!!!!!!!!!!!)
 */

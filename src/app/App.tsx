@@ -16,14 +16,17 @@ x = 10;
 *p = 20;`;
 
 export function App() {
+  // State for the code in the editor
   const [code, setCode] = useState(DEFAULT_CODE);
 
+  // Run the simulation on the current code
   const {
     steps,
     error,
     hasError,
   } = useSimulation(code);
 
+  // Manage the current step in the simulation
   const {
     currentStepIndex,
     currentStep,
@@ -34,22 +37,36 @@ export function App() {
     goToStep,
   } = useStepNavigation(steps);
 
-  const activePointerName = currentStep === null
-    ? null
-    : currentStep.statement.type === "pointer_declaration"
-      ? currentStep.statement.name
-      : "pointerName" in currentStep.statement
-        ? currentStep.statement.pointerName
-        : null;
+  const hasDoublePointers = currentStep?.memory.cells.some(
+    (cell) => cell.pointerDepth === 2,
+  ) ?? false;
 
   return (
     <main>
       <header>
-        <h1 className="header">Pointer Slayer</h1>
+        <div>
+          <h1 className="header">Pointer Slayer</h1>
+          <div className="header-image">
+            <img
+              src="/images/nezuko.png"
+              alt="Pointer Slayer Logo"
+              width={200}
+              height={200}
+              className="nezuko-image"
+              />
+            <img
+              src="/images/box.png"
+              alt="Pointer Slayer Logo"
+              width={200}
+              height={200}
+              className="box-image"
+            />
+          </div>
+        </div>
         <p>Visualize C pointers and memory step by step.</p>
       </header>
 
-      <div className="editor-visualizer-container">
+      <div className={`editor-visualizer-container${hasDoublePointers ? " has-double-pointers" : ""}`}>
         <div>
           <CodeEditor
             code={code}
@@ -91,19 +108,7 @@ export function App() {
             />
           </div>
         </div>
-        <MemoryVisualizer
-          memory={currentStep?.memory ?? null}
-          animationKey={currentStepIndex}
-          animateTargetUpdates={
-            currentStep?.statement.type === "dereference_assignment"
-          }
-          activePointerName={activePointerName}
-          highlightedVariableNames={new Set(
-            currentStep?.changes
-              .filter((change) => change.type === "value_changed")
-              .map((change) => change.variableName) ?? [],
-          )}
-        />
+        <MemoryVisualizer step={currentStep} />
       </div>
 
 
