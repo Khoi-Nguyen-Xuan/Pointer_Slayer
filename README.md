@@ -3,9 +3,11 @@
 **An interactive C pointer and memory visualizer built with React and TypeScript.**
 
 
+
 ## Demo
 
 🔴 **Live Demo:** https://pointer-slayer.netlify.app/
+>  NOW SUPPORTS DOUBLE POINTER!
 
 ---
 
