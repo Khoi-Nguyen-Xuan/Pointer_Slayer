@@ -9,6 +9,10 @@
 🔴 **Live Demo:** https://pointer-slayer.netlify.app/
 >  NOW SUPPORTS DOUBLE POINTER!
 
+🎥 Video Demo: 
+
+https://github.com/user-attachments/assets/8e44aa4c-c42d-4ee7-a985-0ae8f2fcb81c
+
 ---
 
 Pointer Slayer is an educational web application designed to help students that I'm TAing in CMPUT 201 (Practical Programming Methodology) understand one of the most challenging concepts (at least for me) in C programming: **pointers and memory**.
