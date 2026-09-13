@@ -45,7 +45,8 @@ export function getMemoryArrows(
     sources.sort((a, b) => a.rect.centerY - b.rect.centerY || a.address - b.address);
     const spacing = sources.length < 2
       ? 0
-      : Math.min(16, Math.max(0, target.height - 24) / (sources.length - 1));
+      // Keep shared arrowheads close together without stacking them.
+      : Math.min(8, Math.max(0, target.height - 24) / (sources.length - 1));
 
     sources.forEach((source, index) => {
       const offset = (index - (sources.length - 1) / 2) * spacing;
