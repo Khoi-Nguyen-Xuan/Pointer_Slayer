@@ -25,9 +25,15 @@ Pointer Slayer turns C program like this into an interactive visualization showi
 
 🔴 **Live Demo:** https://pointer-slayer.netlify.app/
 
+
+
 🎥 Video Demo: 
 
-https://github.com/user-attachments/assets/8e44aa4c-c42d-4ee7-a985-0ae8f2fcb81c
+https://github.com/user-attachments/assets/b12a72a1-e97e-457c-a782-67e52fa95f7f
+
+
+
+
 
 ---
 
