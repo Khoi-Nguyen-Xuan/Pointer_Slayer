@@ -10,10 +10,27 @@ import { StepSlider } from "../components/controls/StepSlider";
 import { useSimulation } from "../hooks/useSimulation";
 import { useStepNavigation } from "../hooks/useStepNavigation";
 
-const DEFAULT_CODE = `int x = 5;
-int *p = &x;
-x = 10;
-*p = 20;`;
+const DEFAULT_CODE = `// 3 integer variables
+int a = 10;
+int b = 20;
+int c = 30;
+
+// 3 pointers to int
+int *p1 = &a;
+int *p2 = &b;
+int *p3 = &c;
+
+// 3 pointers to pointers
+int **pp1 = &p1;
+int **pp2 = &p2;
+int **pp3 = &p3;
+
+//dereference path
+**pp2 = 50;
+*p1 = 40; 
+
+//Change pointer target
+pp2=pp3;`;
 
 export function App() {
   // State for the code in the editor
