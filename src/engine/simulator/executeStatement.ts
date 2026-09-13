@@ -1,6 +1,6 @@
 import type { MemoryCell, MemoryState } from "../../models/memory";
 import type { MemoryChange } from "../../models/simulation";
-import type { Statement } from "../../models/statement";
+import type { DereferenceDepth, Expression, Statement } from "../../models/statement";
 import { AddressAllocator } from "./addressAllocator";
 
 /**
@@ -19,7 +19,7 @@ export interface ExecuteStatementResult {
 }
 
 /**
- * Represents a semantic/runtime problem in our simulated program.
+ * Represents a semantic/runtime problem in program.
  */
 export class ExecutionError extends Error {
   constructor(message: string) {
@@ -28,24 +28,9 @@ export class ExecutionError extends Error {
   }
 }
 
+// HELPER FUNCTIONS 
 /**
  * Create an independent copy of memory.
- *
- * This is VERY important.
- *
- * We do not want to mutate the previous MemoryState because
- * SimulationStep objects will eventually keep snapshots of
- * memory from earlier steps.
- *
- * Example:
- *
- * Step 1:
- * x = 5
- *
- * Step 2:
- * x = 10
- *
- * Step 1 must still show x = 5.
  */
 function cloneMemory(memory: MemoryState): MemoryState {
   return {
@@ -64,7 +49,7 @@ function findCell(
 }
 
 /**
- * Find a variable or throw a useful simulation error.
+ * Find a variable or throw a missing simulation error.
  */
 function requireCell(
   memory: MemoryState,
@@ -82,7 +67,7 @@ function requireCell(
 }
 
 /**
- * Ensure a variable name has not already been declared.
+ * Ensure a variable has not already been declared.
  */
 function ensureNameAvailable(
   memory: MemoryState,
@@ -96,83 +81,165 @@ function ensureNameAvailable(
 }
 
 /**
- * Ensure a cell is a normal int variable.
+ * Find the cell an expression refers to.
+ * Depth 0 -> the named cell, 1 -> follows one address, 2 -> follows two.
  */
-function requireIntVariable(
+function resolveCell(
   memory: MemoryState,
   name: string,
+  dereferenceDepth: DereferenceDepth,
 ): MemoryCell {
-  const cell = requireCell(memory, name);
+  let cell = requireCell(memory, name);
 
-  if (cell.dataType !== "int") {
-    throw new ExecutionError(
-      `"${name}" is not an int variable.`,
-    );
+  for (let depth = 0; depth < dereferenceDepth; depth += 1) {
+    if (cell.pointerDepth === 0) {
+      throw new ExecutionError(`"${cell.name}" is not a pointer.`);
+    }
+
+    if (cell.value === null) {
+      throw new ExecutionError(
+        `Pointer "${cell.name}" does not point to a variable.`,
+      );
+    }
+
+    //Check if any cell in memory has the address stored in the pointer's value
+    const target = memory.cells.find((candidate) => candidate.address === cell.value);
+
+    if (!target) {
+      throw new ExecutionError(
+        `Pointer "${cell.name}" contains an invalid address.`,
+      );
+    }
+
+    // Each address must be followed by removing one pointer level.
+    if (
+      target.baseType !== cell.baseType ||
+      target.pointerDepth !== cell.pointerDepth - 1
+    ) {
+      throw new ExecutionError(
+        `Pointer "${cell.name}" points to "${target.name}" of type ` +
+        `"${target.baseType}${"*".repeat(target.pointerDepth)}", but requires ` +
+        `"${cell.baseType}${"*".repeat(cell.pointerDepth - 1)}".`,
+      );
+    }
+
+    cell = target;
   }
 
   return cell;
 }
 
 /**
- * Ensure a cell is an int pointer.
+ * Evaluate an expression and return its value, type, and pointer depth.
  */
-function requireIntPointer(
-  memory: MemoryState,
-  name: string,
-): MemoryCell {
-  const cell = requireCell(memory, name);
-
-  if (cell.dataType !== "int_pointer") {
-    throw new ExecutionError(
-      `"${name}" is not a pointer.`,
-    );
-  }
-
-  return cell;
+interface EvaluatedExpression {
+  value: number;
+  baseType: MemoryCell["baseType"];
+  pointerDepth: number;
 }
 
-/**
- * Execute exactly ONE Statement.
- *
- * Its only job is:
- *
- * Statement + Current Memory
- *              ↓
- *         New Memory
- */
+function evaluateExpression(
+  expression: Expression,
+  memory: MemoryState,
+): EvaluatedExpression {
+  switch (expression.kind) {
+    case "literal": {
+      return {
+        value: expression.value,
+        baseType: "int",
+        pointerDepth: 0,
+      };
+    }
+
+    case "address_of": {
+      const target = requireCell(memory, expression.target);
+      return {
+        value: target.address,
+        baseType: target.baseType,
+        pointerDepth: target.pointerDepth + 1,
+      };
+    }
+
+    case "read": {
+      // Follow the dereference depth to find the cell being referenced, then return its value and type.
+      const source = resolveCell(
+        memory,
+        expression.sourceName,
+        expression.dereferenceDepth,
+      );
+
+      if (source.value === null) {
+        throw new ExecutionError(
+          `Variable "${source.name}" is uninitialized and cannot be read.`,
+        );
+      }
+
+      return {
+        value: source.value,
+        baseType: source.baseType,
+        pointerDepth: source.pointerDepth,
+      };
+    }
+
+    default: {
+      // Exhaustive check to ensure all expression kinds are handled.
+      const exhaustiveCheck: never = expression;
+      throw new ExecutionError(
+        `Unsupported expression: ${JSON.stringify(exhaustiveCheck)}`,
+      );
+    }
+  }
+}
+
+/** Execute one declaration or assignment WHILE preserve earlier memory snapshots. */
 export function executeStatement(
   statement: Statement,
   memory: MemoryState,
   addressAllocator: AddressAllocator,
 ): ExecuteStatementResult {
-  /**
-   * Work on a copy so previous simulation states
-   * remain unchanged.
-   */
   const nextMemory = cloneMemory(memory);
 
   switch (statement.type) {
-    /**
-     * ------------------------------------------------------
-     * int x;
-     * int x = 5;
-     * ------------------------------------------------------
-     */
-    case "variable_declaration": {
+    case "declaration": {
+
+      // Ensure the variable name is not declared
       ensureNameAvailable(nextMemory, statement.name);
 
+      // Value being assigned to the variable being declared
+      let initialValue: number | null = null;
+
+      // Declaration has an initializer, evaluate and check type compatibility.
+      if (statement.initializer !== undefined) {
+        const initializer = evaluateExpression(statement.initializer, nextMemory);
+
+        if (
+          initializer.baseType !== statement.variableType ||
+          initializer.pointerDepth !== statement.pointerDepth
+        ) {
+          throw new ExecutionError(
+            `Cannot initialize "${statement.name}" of type ` +
+            `"${statement.variableType}${"*".repeat(statement.pointerDepth)}" ` +
+            `with a value of type ` +
+            `"${initializer.baseType}${"*".repeat(initializer.pointerDepth)}".`,
+          );
+        }
+
+        initialValue = initializer.value;
+      }
+
+      // Create the new memory cell and add it to the memory state.
       const cell: MemoryCell = {
         name: statement.name,
-        dataType: "int",
+        baseType: statement.variableType,
+        pointerDepth: statement.pointerDepth,
         address: addressAllocator.allocate(),
-        value: statement.initialValue ?? null,
+        value: initialValue,
       };
 
       nextMemory.cells.push(cell);
 
       return {
         memory: nextMemory,
-
         changes: [
           {
             type: "created",
@@ -182,207 +249,71 @@ export function executeStatement(
       };
     }
 
-    /**
-     * ------------------------------------------------------
-     * int *p;
-     * int *p = &x;
-     * ------------------------------------------------------
-     */
-    case "pointer_declaration": {
-      ensureNameAvailable(nextMemory, statement.name);
+    // x = y; / p = q; / *pp = &y; / **pp = *p; / ...
+    case "assignment": {
+      const destination = resolveCell(
+        nextMemory,
+        statement.destination.name,
+        statement.destination.dereferenceDepth,
+      );
+      const expression = evaluateExpression(statement.expression, nextMemory);
 
-      let targetAddress: number | null = null;
-
-      /**
-       * If:
-       *
-       * int *p = &x;
-       *
-       * then x must already exist and must be an int.
-       */
-      if (statement.target !== undefined) {
-        const target = requireIntVariable(
-          nextMemory,
-          statement.target,
+      // Validation of type compatibility between the destination and the evaluated expression.
+      if (
+        expression.baseType !== destination.baseType ||
+        expression.pointerDepth !== destination.pointerDepth
+      ) {
+        throw new ExecutionError(
+          `Cannot assign a value of type ` +
+          `"${expression.baseType}${"*".repeat(expression.pointerDepth)}" ` +
+          `to "${destination.name}" of type ` +
+          `"${destination.baseType}${"*".repeat(destination.pointerDepth)}".`,
         );
-
-        targetAddress = target.address;
       }
 
-      const cell: MemoryCell = {
-        name: statement.name,
-        dataType: "int_pointer",
-        address: addressAllocator.allocate(),
+      const previousValue = destination.value;
 
-        /**
-         * IMPORTANT:
-         *
-         * p stores x's ADDRESS.
-         *
-         * It does NOT store "x".
-         */
-        value: targetAddress,
-      };
+      // Perform the assignment !!!
+      destination.value = expression.value;
 
-      nextMemory.cells.push(cell);
+      // records a step when an assignment changes nothing.
+      if (previousValue === destination.value) {
+        return { memory: nextMemory, changes: [] };
+      }
 
+      // Classify the resolved cell
+
+      //Case: Destination is a pointer 
+      if (destination.pointerDepth > 0) {
+        return {
+          memory: nextMemory,
+          changes: [
+            {
+              type: "pointer_changed",
+              pointerName: destination.name,
+              previousAddress: previousValue,
+              newAddress: destination.value,
+            },
+          ],
+        };
+      }
+
+      // Case: Destination is a variable
       return {
         memory: nextMemory,
-
-        changes: [
-          {
-            type: "created",
-            cell: { ...cell },
-          },
-        ],
-      };
-    }
-
-    /**
-     * ------------------------------------------------------
-     * x = 10;
-     * ------------------------------------------------------
-     */
-    case "variable_assignment": {
-      const cell = requireIntVariable(
-        nextMemory,
-        statement.name,
-      );
-
-      const previousValue = cell.value;
-
-      cell.value = statement.value;
-
-      return {
-        memory: nextMemory,
-
         changes: [
           {
             type: "value_changed",
-            variableName: statement.name,
+            variableName: destination.name,
             previousValue,
-            newValue: statement.value,
+            newValue: destination.value,
           },
         ],
       };
     }
 
-    /**
-     * ------------------------------------------------------
-     * p = &x;
-     * ------------------------------------------------------
-     */
-    case "pointer_assignment": {
-      const pointer = requireIntPointer(
-        nextMemory,
-        statement.pointerName,
-      );
-
-      const target = requireIntVariable(
-        nextMemory,
-        statement.target,
-      );
-
-      const previousAddress = pointer.value;
-      const newAddress = target.address;
-
-      /**
-       * Store the target variable's ADDRESS inside p.
-       */
-      pointer.value = newAddress;
-
-      return {
-        memory: nextMemory,
-
-        changes: [
-          {
-            type: "pointer_changed",
-            pointerName: statement.pointerName,
-            previousAddress,
-            newAddress,
-          },
-        ],
-      };
-    }
-
-    /**
-     * ------------------------------------------------------
-     * *p = 20;
-     * ------------------------------------------------------
-     *
-     * This is the most important pointer operation.
-     *
-     * If:
-     *
-     * p.value === 0x1000
-     *
-     * we search memory for the cell whose:
-     *
-     * address === 0x1000
-     *
-     * and modify THAT variable.
-     */
-    case "dereference_assignment": {
-      const pointer = requireIntPointer(
-        nextMemory,
-        statement.pointerName,
-      );
-
-      /**
-       * int *p;
-       *
-       * In our educational model, an uninitialized pointer
-       * has value = null and cannot be dereferenced.
-       */
-      if (pointer.value === null) {
-        throw new ExecutionError(
-          `Pointer "${statement.pointerName}" does not point to a variable.`,
-        );
-      }
-
-      const target = nextMemory.cells.find(
-        (cell) => cell.address === pointer.value,
-      );
-
-      if (!target) {
-        throw new ExecutionError(
-          `Pointer "${statement.pointerName}" contains an invalid address.`,
-        );
-      }
-
-      if (target.dataType !== "int") {
-        throw new ExecutionError(
-          `Pointer "${statement.pointerName}" does not point to an int variable.`,
-        );
-      }
-
-      const previousValue = target.value;
-
-      target.value = statement.value;
-
-      return {
-        memory: nextMemory,
-
-        changes: [
-          {
-            type: "value_changed",
-            variableName: target.name,
-            previousValue,
-            newValue: statement.value,
-          },
-        ],
-      };
-    }
-
-    /**
-     * TypeScript exhaustiveness check.
-     *
-     * If we later add a new Statement type but forget
-     * to handle it here, TypeScript can warn us.
-     */
     default: {
       const exhaustiveCheck: never = statement;
-
       throw new ExecutionError(
         `Unsupported statement: ${JSON.stringify(exhaustiveCheck)}`,
       );

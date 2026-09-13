@@ -154,5 +154,5 @@ SimulationStep[]: [Step 1, Step 2, Step 3]
 
 Step 1 => Memory state = [MemoryCell của line code thứ 1]
 Step 2 => Memory state = [MemoryCell của line code thứ 1, MemoryCell của line code thứ 2]
-Step 3 => Memory state = [MemoryCell của line code thứ 1, MemoryCell của line code thứ 2] (giá trị của MemoryCell của line code thứ 1 đã bị thay đổi) 
+Step 3 => Memory state = [MemoryCell của line code thứ 1, MemoryCell của line code thứ 2]
 */

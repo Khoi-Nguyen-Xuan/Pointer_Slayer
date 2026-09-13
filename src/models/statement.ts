@@ -14,7 +14,7 @@ export interface Declaration {
   variableType: SupportedDataType;
   name: string;
   pointerDepth: 0 | 1 | 2;
-  initializer?: Expression;
+  initializer?: Expression; 
 }
 
 export interface Assignment {

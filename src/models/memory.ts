@@ -1,36 +1,17 @@
+import type { SupportedDataType } from "../constants/supportedFeatures";
+
 /**
  * Primitive value stored inside a normal variable.
  */
 export type PrimitiveValue = number;
-
-/**
- * Represents one variable occupying memory.
- *
- * Examples:
- *
- * int x = 5;
- *
- * {
- *   name: "x",
- *   dataType: "int",
- *   address: 4096,
- *   value: 5
- * }
- *
- *
- * int *p = &x;
- *
- * {
- *   name: "p",
- *   dataType: "int_pointer",
- *   address: 4100,
- *   value: 4096
- * }
- */
 export interface MemoryCell {
   name: string;
+  baseType: SupportedDataType;
 
-  dataType: "int" | "int_pointer";
+  /**
+   * Declared type: 0 = int, 1 = int*, 2 = int**.
+   */
+  pointerDepth: 0 | 1 | 2;
 
   /**
    * Fake educational memory address.
@@ -38,13 +19,11 @@ export interface MemoryCell {
   address: number;
 
   /**
-   * For int:
+   * For pointerDepth 0:
    *   value is the integer stored there.
    *
-   * For int_pointer:
-   *   value is the address being pointed to.
-   *
-   * null means the cell currently has no meaningful value.
+   * For pointerDepth 1 or 2:
+   *   value is the address of the directly referenced cell.
    */
   value: number | null;
 }

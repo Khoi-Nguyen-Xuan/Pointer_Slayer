@@ -21,13 +21,15 @@ int y = 10;`;
     expect(finalMemory.cells).toEqual([
       {
         name: "x",
-        dataType: "int",
+        baseType: "int",
+        pointerDepth: 0,
         address: 0x1000,
         value: 5,
       },
       {
         name: "y",
-        dataType: "int",
+        baseType: "int",
+        pointerDepth: 0,
         address: 0x1004,
         value: 10,
       },
@@ -304,7 +306,8 @@ int *p = &x;`;
 
     expect(result.steps[0].memory.cells[0]).toEqual({
       name: "x",
-      dataType: "int",
+      baseType: "int",
+      pointerDepth: 0,
       address: 0x1000,
       value: null,
     });
@@ -317,7 +320,8 @@ int *p = &x;`;
 
     expect(result.steps[0].memory.cells[0]).toEqual({
       name: "p",
-      dataType: "int_pointer",
+      baseType: "int",
+      pointerDepth: 1,
       address: 0x1000,
       value: null,
     });
@@ -373,38 +377,22 @@ int x = 10;`;
     const code = `int x = 5;
 x = &x;`;
 
-    /**
-     * Note:
-     *
-     * The parser interprets:
-     *
-     * x = &x;
-     *
-     * as a pointer assignment syntactically.
-     *
-     * The simulator then correctly rejects x because
-     * x is not actually a pointer.
-     */
     expect(() =>
       simulateProgram(parseProgram(code)),
     ).toThrow(
-      '"x" is not a pointer.',
+      'Cannot assign a value of type "int*" to "x" of type "int".',
     );
   });
 
-  it("throws when a pointer tries to point to another pointer in the MVP", () => {
+  it("rejects int** initialization of an int* variable", () => {
     const code = `int x = 5;
 int *p = &x;
 int *q = &p;`;
 
-    /**
-     * Double pointers are intentionally unsupported
-     * in the MVP.
-     */
     expect(() =>
       simulateProgram(parseProgram(code)),
     ).toThrow(
-      '"p" is not an int variable.',
+      'Cannot initialize "q" of type "int*" with a value of type "int**".',
     );
   });
 

@@ -30,40 +30,6 @@ export const SUPPORTED_DATA_TYPES = ["int"] as const;
 
 /**
  * Type derived automatically from SUPPORTED_DATA_TYPES.
- *
- * Equivalent to:
- *
- * type SupportedDataType = "int";
  */
 export type SupportedDataType =
   (typeof SUPPORTED_DATA_TYPES)[number];
-
-/**
- * Examples of syntax that our parser should accept.
- *
- * These are documentation/examples only.
- * Actual parsing behavior will be tested separately.
- */
-export const SUPPORTED_SYNTAX_EXAMPLES = {
-  variableDeclaration: [
-    "int x;",
-    "int x = 5;",
-  ],
-
-  pointerDeclaration: [
-    "int *p;",
-    "int *p = &x;",
-  ],
-
-  variableAssignment: [
-    "x = 10;",
-  ],
-
-  pointerAssignment: [
-    "p = &x;",
-  ],
-
-  dereferenceAssignment: [
-    "*p = 20;",
-  ],
-} as const;
