@@ -492,27 +492,6 @@ This keeps DOM measurement logic separate from memory simulation logic.
 
 ---
 
-# Testing
-
-The parsing and simulation layers are tested independently from the React interface.
-
-The project currently includes **35 automated tests** covering the core engine:
-
-```text
-Parser tests:     16
-Simulator tests:  19
-────────────────────
-Total:            35
-```
-
-Run the test suite with:
-
-```bash
-npm test
-```
-
----
-
 # Running the Project Locally
 
 Clone the repository:
