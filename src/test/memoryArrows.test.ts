@@ -3,7 +3,7 @@ import { parseProgram } from "../engine/parser/parser";
 import { simulateProgram } from "../engine/simulator/simulator";
 import type { ElementPositions, ElementRect } from "../hooks/useElementPositions";
 import type { MemoryCell, MemoryState } from "../models/memory";
-import { getMemoryArrows, getStepArrowPath } from "../components/visualizer/memoryArrows";
+import { getMemoryArrows, getStepArrowPath, getStepHighlightNames } from "../components/visualizer/memoryArrows";
 
 function rect(left: number, top: number, width = 100, height = 100): ElementRect {
   return { left, top, right: left + width, bottom: top + height, width, height, centerX: left + width / 2, centerY: top + height / 2 };
@@ -92,5 +92,24 @@ describe("step arrow paths", () => {
   it("follows the current double-pointer target after a reassignment", () => {
     const step = simulateProgram(parseProgram(`${setup}\npp = &q;\n**pp = 10;`)).steps.at(-1)!;
     expect(getStepArrowPath(step)).toEqual([0x1010, 0x100c]);
+  });
+});
+
+describe("destination highlights", () => {
+  it.each([
+    ["**pp = 10;", "x"],
+    ["**pp = 5;", "x"],
+    ["*p = 5;", "x"],
+    ["*pp = p;", "p"],
+    ["*pp = &y;", "p"],
+  ])("highlights the resolved destination for %s", (code, expectedName) => {
+    const step = simulateProgram(parseProgram(`${setup}\n${code}`)).steps.at(-1)!;
+    expect([...getStepHighlightNames(step)]).toEqual([expectedName]);
+  });
+
+  it("does not invent a change event to highlight an unchanged destination", () => {
+    const step = simulateProgram(parseProgram(`${setup}\n**pp = 5;`)).steps.at(-1)!;
+    expect(step.changes).toEqual([]);
+    expect([...getStepHighlightNames(step)]).toEqual(["x"]);
   });
 });

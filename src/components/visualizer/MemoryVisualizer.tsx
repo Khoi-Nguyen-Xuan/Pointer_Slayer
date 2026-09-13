@@ -4,7 +4,7 @@ import { useElementPositions } from "../../hooks/useElementPositions";
 import type { SimulationStep } from "../../models/simulation";
 import { MemoryBox } from "./MemoryBox";
 import { SvgArrowLayer } from "./SvgArrowLayer";
-import { getStepArrowPath } from "./memoryArrows";
+import { getStepArrowPath, getStepHighlightNames } from "./memoryArrows";
 
 import "./MemoryVisualizer.css";
 
@@ -40,18 +40,18 @@ function MemorySnapshot({ step }: { step: SimulationStep }) {
   const onAnimationComplete = useCallback(() => setCompletedStep(step), [step]);
   const animationComplete = arrowPath.length === 0 || completedStep === step;
   const hasDoublePointers = memory.cells.some((cell) => cell.pointerDepth === 2);
-  const highlightedVariableNames = new Set<string>();
+  const highlightedVariableNames = animationComplete
+    ? getStepHighlightNames(step)
+    : new Set<string>();
   const pendingValues = new Map<string, number | null>();
 
   // Show the previous value while the pointer path runs, then reveal and highlight
   // the new value. The simulator's memory snapshot is never modified for animation.
   for (const change of step.changes) {
-    if (change.type === "value_changed") {
-      if (animationComplete) highlightedVariableNames.add(change.variableName);
-      else pendingValues.set(change.variableName, change.previousValue);
-    } else if (change.type === "pointer_changed") {
-      if (animationComplete) highlightedVariableNames.add(change.pointerName);
-      else pendingValues.set(change.pointerName, change.previousAddress);
+    if (!animationComplete && change.type === "value_changed") {
+      pendingValues.set(change.variableName, change.previousValue);
+    } else if (!animationComplete && change.type === "pointer_changed") {
+      pendingValues.set(change.pointerName, change.previousAddress);
     }
   }
 
@@ -61,52 +61,51 @@ function MemorySnapshot({ step }: { step: SimulationStep }) {
       ref={containerRef}
       data-animation-state={animationComplete ? "complete" : "running"}
     >
-    <div className="memory-cells">
-      <div className="memory-column memory-variables">
-        <h3 className="memory-column-title">Integers</h3>
-        {memory.cells
-          .filter((cell) => cell.pointerDepth === 0)
-          .map((cell) => (
-            <MemoryBox
-              key={cell.address}
-              cell={cell}
-              isHighlighted={highlightedVariableNames.has(cell.name)}
-                  displayValue={pendingValues.has(cell.name) ? pendingValues.get(cell.name) : cell.value}
-            />
-          ))}
-      </div>
-
-      <div className="memory-column memory-pointers">
-        <h3 className="memory-column-title">Pointers</h3>
-        {memory.cells
-          .filter((cell) => cell.pointerDepth === 1)
-          .map((cell) => (
-            <MemoryBox
-              key={cell.address}
-              cell={cell}
-              isHighlighted={highlightedVariableNames.has(cell.name)}
-                  displayValue={pendingValues.has(cell.name) ? pendingValues.get(cell.name) : cell.value}
-            />
-          ))}
-      </div>
-
-      {hasDoublePointers && (
-        <div className="memory-column memory-double-pointers">
-          <h3 className="memory-column-title">Double pointers</h3>
+      <div className="memory-cells">
+        <div className="memory-column memory-variables">
+          <h3 className="memory-column-title">Integers</h3>
           {memory.cells
-            .filter((cell) => cell.pointerDepth === 2)
+            .filter((cell) => cell.pointerDepth === 0)
             .map((cell) => (
               <MemoryBox
                 key={cell.address}
                 cell={cell}
                 isHighlighted={highlightedVariableNames.has(cell.name)}
-                  displayValue={pendingValues.has(cell.name) ? pendingValues.get(cell.name) : cell.value}
+                displayValue={pendingValues.has(cell.name) ? pendingValues.get(cell.name) : cell.value}
               />
             ))}
         </div>
-      )}
-    </div>
 
+        <div className="memory-column memory-pointers">
+          <h3 className="memory-column-title">Pointers</h3>
+          {memory.cells
+            .filter((cell) => cell.pointerDepth === 1)
+            .map((cell) => (
+              <MemoryBox
+                key={cell.address}
+                cell={cell}
+                isHighlighted={highlightedVariableNames.has(cell.name)}
+                displayValue={pendingValues.has(cell.name) ? pendingValues.get(cell.name) : cell.value}
+              />
+            ))}
+        </div>
+
+        {hasDoublePointers && (
+          <div className="memory-column memory-double-pointers">
+            <h3 className="memory-column-title">Double pointers</h3>
+            {memory.cells
+              .filter((cell) => cell.pointerDepth === 2)
+              .map((cell) => (
+                <MemoryBox
+                  key={cell.address}
+                  cell={cell}
+                  isHighlighted={highlightedVariableNames.has(cell.name)}
+                  displayValue={pendingValues.has(cell.name) ? pendingValues.get(cell.name) : cell.value}
+                />
+              ))}
+          </div>
+        )}
+      </div>
 
       <SvgArrowLayer
         positions={positions}

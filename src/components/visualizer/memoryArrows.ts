@@ -97,3 +97,24 @@ export function getStepArrowPath(step: SimulationStep): number[] {
 
   return [...new Set(path)];
 }
+
+/** Highlight the cell written through a pointer even if its value stayed equal. */
+export function getStepHighlightNames(step: SimulationStep): Set<string> {
+  const names = new Set<string>();
+  for (const change of step.changes) {
+    if (change.type === "value_changed") names.add(change.variableName);
+    else if (change.type === "pointer_changed") names.add(change.pointerName);
+  }
+
+  const { statement, memory } = step;
+  if (statement.type === "assignment" && statement.destination.dereferenceDepth > 0) {
+    let cell = memory.cells.find((candidate) => candidate.name === statement.destination.name);
+    for (let depth = 0; depth < statement.destination.dereferenceDepth; depth += 1) {
+      if (!cell || cell.pointerDepth === 0 || cell.value === null) return names;
+      const targetAddress = cell.value;
+      cell = memory.cells.find((candidate) => candidate.address === targetAddress);
+    }
+    if (cell) names.add(cell.name);
+  }
+  return names;
+}
