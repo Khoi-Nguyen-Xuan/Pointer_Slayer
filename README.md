@@ -83,7 +83,7 @@ int *p = &x;
 
 ### Interactive C Code Editor
 
-Users can write a small C program using the subset of syntax supported by Pointer Slayer.
+Users can write a C program within the subset of syntax supported by Pointer Slayer.
 
 Example:
 
@@ -193,7 +193,7 @@ Pointer Slayer separates the application into three primary layers:
                 └─────────────────┘
 ```
 
-This separation keeps parsing, program execution, and visualization independent from each other.
+This architecture helps separating parsing, program execution, and visualization independent from each other.
 
 ---
 
@@ -354,8 +354,7 @@ The parser is responsible for translating supported C syntax into typed internal
 Responsibilities include:
 
 * recognizing declarations
-* recognizing pointer declarations
-* detecting assignments
+* recognizing assignments
 * detecting address-of expressions
 * detecting pointer dereferences
 * ignoring blank lines and comments
@@ -395,9 +394,9 @@ The simulator tracks:
 
 ## Address Allocator
 
-Pointer visualization requires variables to have addresses even though Pointer Slayer does not execute native C code.
+Pointer visualization requires variables to have addresses (even though Pointer Slayer does not execute native C code).
 
-The application therefore uses a deterministic address allocator to assign simulated addresses to variables.
+I therefore uses a deterministic address allocator to assign simulated addresses to variables.
 
 For example:
 
@@ -407,7 +406,7 @@ y → 0x1004
 p → 0x1008
 ```
 
-These addresses allow pointer relationships to behave similarly to real C memory while keeping the entire application deterministic and browser-based.
+These addresses allow pointer relationships to behave quite similarly to real C memory while keeping the entire application deterministic.
 
 ---
 
