@@ -1,23 +1,10 @@
 # Pointer Slayer 
 
 **An interactive C pointer and memory visualizer built with React and TypeScript.**
-
-
-
-## Demo
-
-🔴 **Live Demo:** https://pointer-slayer.netlify.app/
 >  NOW SUPPORTS DOUBLE POINTER!
+Pointer Slayer is an educational web application designed to help students that I'm TAing in CMPUT 201 (Practical Programming Methodology with C) understand one of the most challenging concepts (at least for me) in C programming: **pointers and memory**.
 
-🎥 Video Demo: 
-
-https://github.com/user-attachments/assets/8e44aa4c-c42d-4ee7-a985-0ae8f2fcb81c
-
----
-
-Pointer Slayer is an educational web application designed to help students that I'm TAing in CMPUT 201 (Practical Programming Methodology) understand one of the most challenging concepts (at least for me) in C programming: **pointers and memory**.
-
-Instead of simply showing the output of a C program, Pointer Slayer parses a supported subset of C code, simulates its execution entirely in the browser, and visualizes how variables, memory addresses, and pointers change **step by step**.
+Instead of simply showing the output of a C program, Pointer Slayer parses a supported subset of C code, simulates its execution and visualizes how variables, memory addresses, and pointers change **step by step**.
 
 The project was inspired by the difficulty I often face when trying to trace pointer assignments such as:
 
@@ -25,11 +12,23 @@ The project was inspired by the difficulty I often face when trying to trace poi
 int x = 5;
 int *p = &x;
 *p = 10;
+int **pp = &p;
+**pp = 20; 
 ```
 
 Pointer Slayer turns C program like this into an interactive visualization showing variables, addresses, values, and pointer relationships.
 
 > Pointer Slayer is intentionally **not a compiler or IDE**. 
+
+---
+## Demo
+
+🔴 **Live Demo:** https://pointer-slayer.netlify.app/
+
+🎥 Video Demo: 
+
+https://github.com/user-attachments/assets/8e44aa4c-c42d-4ee7-a985-0ae8f2fcb81c
+
 ---
 
 # Supported C Syntax
