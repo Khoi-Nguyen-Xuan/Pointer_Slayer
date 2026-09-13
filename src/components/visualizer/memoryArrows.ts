@@ -1,4 +1,4 @@
-import type { ElementPositions, ElementRect } from "../../hooks/useElementPositions";
+import type { ElementPositions } from "../../hooks/useElementPositions";
 import type { MemoryState } from "../../models/memory";
 import type { SimulationStep } from "../../models/simulation";
 
@@ -11,18 +11,12 @@ export interface MemoryArrow {
   target: { x: number; y: number };
 }
 
-/** Give arrows entering the same side of a box separate attachment points. */
+/** Connect the centers of the facing box edges without endpoint offsets. */
 export function getMemoryArrows(
   memory: MemoryState,
   positions: ElementPositions,
 ): MemoryArrow[] {
-  const groups = new Map<string, {
-    targetAddress: number;
-    target: ElementRect;
-    pointsRight: boolean;
-    sources: { address: number; rect: ElementRect }[];
-  }>();
-
+  const arrows: MemoryArrow[] = [];
   for (const cell of memory.cells) {
     if (cell.pointerDepth === 0 || cell.value === null) continue;
     const source = positions.memoryTargets.get(cell.address);
@@ -30,38 +24,17 @@ export function getMemoryArrows(
     if (!source || !target) continue;
 
     const pointsRight = source.centerX < target.centerX;
-    const key = `${cell.value}:${pointsRight ? "left" : "right"}`;
-    let group = groups.get(key);
-    if (!group) {
-      group = { targetAddress: cell.value, target, pointsRight, sources: [] };
-      groups.set(key, group);
-    }
-    group.sources.push({ address: cell.address, rect: source });
-  }
-
-  const arrows: MemoryArrow[] = [];
-  for (const { targetAddress, target, pointsRight, sources } of groups.values()) {
-    // Match the vertical order of sources to reduce crossings near the box.
-    sources.sort((a, b) => a.rect.centerY - b.rect.centerY || a.address - b.address);
-    const spacing = sources.length < 2
-      ? 0
-      // Keep shared arrowheads close together without stacking them.
-      : Math.min(8, Math.max(0, target.height - 24) / (sources.length - 1));
-
-    sources.forEach((source, index) => {
-      const offset = (index - (sources.length - 1) / 2) * spacing;
-      arrows.push({
-        id: `${source.address}->${targetAddress}`,
-        pointerAddress: source.address,
-        source: {
-          x: pointsRight ? source.rect.right : source.rect.left,
-          y: source.rect.centerY,
-        },
-        target: {
-          x: pointsRight ? target.left : target.right,
-          y: target.centerY + offset,
-        },
-      });
+    arrows.push({
+      id: `${cell.address}->${cell.value}`,
+      pointerAddress: cell.address,
+      source: {
+        x: pointsRight ? source.right : source.left,
+        y: source.centerY,
+      },
+      target: {
+        x: pointsRight ? target.left : target.right,
+        y: target.centerY,
+      },
     });
   }
   return arrows;

@@ -2,16 +2,9 @@
 
 **An interactive C pointer and memory visualizer built with React and TypeScript.**
 
+Pointer Slayer is an educational web application designed to help students that I'm TAing in CMPUT 201 (Practical Programming Methodology with C) understand one of the most challenging concepts (at least for me) in C programming: **pointers and memory**.
 
-## Demo
-
-🔴 **Live Demo:** https://pointer-slayer.netlify.app/
-
----
-
-Pointer Slayer is an educational web application designed to help students that I'm TAing in CMPUT 201 (Practical Programming Methodology) understand one of the most challenging concepts (at least for me) in C programming: **pointers and memory**.
-
-Instead of simply showing the output of a C program, Pointer Slayer parses a supported subset of C code, simulates its execution entirely in the browser, and visualizes how variables, memory addresses, and pointers change **step by step**.
+Instead of simply showing the output of a C program, Pointer Slayer parses a supported subset of C code, simulates its execution and visualizes how variables, memory addresses, and pointers change **step by step**.
 
 The project was inspired by the difficulty I often face when trying to trace pointer assignments such as:
 
@@ -19,11 +12,23 @@ The project was inspired by the difficulty I often face when trying to trace poi
 int x = 5;
 int *p = &x;
 *p = 10;
+int **pp = &p;
+**pp = 20; 
 ```
 
 Pointer Slayer turns C program like this into an interactive visualization showing variables, addresses, values, and pointer relationships.
 
 > Pointer Slayer is intentionally **not a compiler or IDE**. 
+
+---
+## Demo
+
+🔴 **Live Demo:** https://pointer-slayer.netlify.app/
+
+🎥 Video Demo: 
+
+https://github.com/user-attachments/assets/8e44aa4c-c42d-4ee7-a985-0ae8f2fcb81c
+
 ---
 
 # Supported C Syntax
@@ -78,7 +83,7 @@ int *p = &x;
 
 ### Interactive C Code Editor
 
-Users can write a small C program using the subset of syntax supported by Pointer Slayer.
+Users can write a C program within the subset of syntax supported by Pointer Slayer.
 
 Example:
 
@@ -188,7 +193,7 @@ Pointer Slayer separates the application into three primary layers:
                 └─────────────────┘
 ```
 
-This separation keeps parsing, program execution, and visualization independent from each other.
+This architecture helps separating parsing, program execution, and visualization independent from each other.
 
 ---
 
@@ -349,8 +354,7 @@ The parser is responsible for translating supported C syntax into typed internal
 Responsibilities include:
 
 * recognizing declarations
-* recognizing pointer declarations
-* detecting assignments
+* recognizing assignments
 * detecting address-of expressions
 * detecting pointer dereferences
 * ignoring blank lines and comments
@@ -390,9 +394,9 @@ The simulator tracks:
 
 ## Address Allocator
 
-Pointer visualization requires variables to have addresses even though Pointer Slayer does not execute native C code.
+Pointer visualization requires variables to have addresses (even though Pointer Slayer does not execute native C code).
 
-The application therefore uses a deterministic address allocator to assign simulated addresses to variables.
+I therefore uses a deterministic address allocator to assign simulated addresses to variables.
 
 For example:
 
@@ -402,7 +406,7 @@ y → 0x1004
 p → 0x1008
 ```
 
-These addresses allow pointer relationships to behave similarly to real C memory while keeping the entire application deterministic and browser-based.
+These addresses allow pointer relationships to behave quite similarly to real C memory while keeping the entire application deterministic.
 
 ---
 
@@ -484,27 +488,6 @@ This keeps DOM measurement logic separate from memory simulation logic.
 * **Oxlint**
 * npm
 * Git / GitHub
-
----
-
-# Testing
-
-The parsing and simulation layers are tested independently from the React interface.
-
-The project currently includes **35 automated tests** covering the core engine:
-
-```text
-Parser tests:     16
-Simulator tests:  19
-────────────────────
-Total:            35
-```
-
-Run the test suite with:
-
-```bash
-npm test
-```
 
 ---
 
