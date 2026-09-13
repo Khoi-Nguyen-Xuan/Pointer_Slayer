@@ -65,3 +65,11 @@ h2{
 .memory-arrows path{
     fill: var(--accent-border);
 }
+
+.memory-arrows .memory-arrow-pulse{
+    stroke: #fff3c4;
+    stroke-width: 3;
+    stroke-linecap: round;
+    opacity: 0;
+    filter: drop-shadow(0 0 3px #fbbf24) drop-shadow(0 0 7px rgba(251, 191, 36, 0.7));
+}

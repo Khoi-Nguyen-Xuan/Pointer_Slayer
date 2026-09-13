@@ -48,32 +48,52 @@ export function SvgArrowLayer({
         const arrow = arrows.find((candidate) => candidate.pointerAddress === arrowPath[index]);
         if (!arrow || cancelled) return;
         const group = arrowRefs.current.get(arrow.id);
-        const line = group?.querySelector("line");
-        const arrowhead = group?.querySelector("path");
-        if (!group || !line || !arrowhead) return;
-
-        const angle = Math.atan2(
-          arrow.target.y - arrow.source.y,
-          arrow.target.x - arrow.source.x,
-        ) * 180 / Math.PI;
+        const pulse = group?.querySelector(".memory-arrow-pulse");
+        if (!group || !pulse) return;
         group.dataset.animating = "true";
         activeGroups.push(group);
 
-        const lineAnimation = line.animate(
-          [{ strokeDasharray: "0 1" }, { strokeDasharray: "1 0" }],
-          { duration, easing: "linear" },
-        );
-        const headAnimation = arrowhead.animate(
-          [
-            { transform: `translate(${arrow.source.x}px, ${arrow.source.y}px) rotate(${angle}deg)` },
-            { transform: `translate(${arrow.target.x}px, ${arrow.target.y}px) rotate(${angle}deg)` },
-          ],
-          { duration, easing: "linear" },
-        );
-        animations.push(lineAnimation, headAnimation);
+        // The path lists dereference hops first, then any created/retargeted
+        // pointer. Only the dereference hops carry a glowing pulse.
+        const isDereferenceHop = step.statement.type === "assignment"
+          && index < step.statement.destination.dereferenceDepth;
+        const hopAnimations: Animation[] = [];
+        if (isDereferenceHop) {
+          hopAnimations.push(pulse.animate(
+            [
+              { strokeDashoffset: "0.18", opacity: 0, offset: 0 },
+              { strokeDashoffset: "0", opacity: 1, offset: 0.15 },
+              { strokeDashoffset: "-0.82", opacity: 1, offset: 0.85 },
+              { strokeDashoffset: "-1", opacity: 0, offset: 1 },
+            ],
+            { duration, easing: "linear" },
+          ));
+        } else {
+          const line = group.querySelector(".memory-arrow-line");
+          const arrowhead = group.querySelector(".memory-arrowhead");
+          if (!line || !arrowhead) return;
+          const angle = Math.atan2(
+            arrow.target.y - arrow.source.y,
+            arrow.target.x - arrow.source.x,
+          ) * 180 / Math.PI;
+          hopAnimations.push(
+            line.animate(
+              [{ strokeDasharray: "0 1" }, { strokeDasharray: "1 0" }],
+              { duration, easing: "linear" },
+            ),
+            arrowhead.animate(
+              [
+                { transform: `translate(${arrow.source.x}px, ${arrow.source.y}px) rotate(${angle}deg)` },
+                { transform: `translate(${arrow.target.x}px, ${arrow.target.y}px) rotate(${angle}deg)` },
+              ],
+              { duration, easing: "linear" },
+            ),
+          );
+        }
+        animations.push(...hopAnimations);
 
         try {
-          await Promise.all([lineAnimation.finished, headAnimation.finished]);
+          await Promise.all(hopAnimations.map((animation) => animation.finished));
         } catch {
           // Navigation, editing, or resizing cancels the active animation.
           return;
@@ -110,6 +130,7 @@ export function SvgArrowLayer({
           }}
         >
           <line
+            className="memory-arrow-line"
             pathLength={1}
             strokeDasharray="1 0"
             x1={arrow.source.x}
@@ -124,6 +145,15 @@ export function SvgArrowLayer({
               arrow.target.y - arrow.source.y,
               arrow.target.x - arrow.source.x,
             ) * 180 / Math.PI})`}
+          />
+          <line
+            className="memory-arrow-pulse"
+            pathLength={1}
+            strokeDasharray="0.18 1"
+            x1={arrow.source.x}
+            x2={arrow.target.x}
+            y1={arrow.source.y}
+            y2={arrow.target.y}
           />
         </g>
       ))}
