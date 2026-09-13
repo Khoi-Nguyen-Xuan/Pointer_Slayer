@@ -2,8 +2,6 @@
 
 **An interactive C pointer and memory visualizer built with React and TypeScript.**
 
->  NOW SUPPORTS DOUBLE POINTER!
-
 Pointer Slayer is an educational web application designed to help students that I'm TAing in CMPUT 201 (Practical Programming Methodology with C) understand one of the most challenging concepts (at least for me) in C programming: **pointers and memory**.
 
 Instead of simply showing the output of a C program, Pointer Slayer parses a supported subset of C code, simulates its execution and visualizes how variables, memory addresses, and pointers change **step by step**.
