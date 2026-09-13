@@ -20,11 +20,11 @@ const positions: ElementPositions = {
 };
 
 describe("arrow attachment points", () => {
-  it("separates arrows sharing a target and orders their endpoints vertically", () => {
+  it("centers arrows sharing a target without offsets", () => {
     const arrows = getMemoryArrows(memory, positions);
-    expect(arrows.map((arrow) => arrow.target)).toEqual([{ x: 100, y: 46 }, { x: 100, y: 54 }]);
+    expect(arrows.map((arrow) => arrow.target)).toEqual([{ x: 100, y: 50 }, { x: 100, y: 50 }]);
     expect(arrows.map((arrow) => arrow.pointerAddress)).toEqual([200, 300]);
-    expect(getMemoryArrows({ cells: [...memory.cells].reverse() }, positions)).toEqual(arrows);
+    expect(getMemoryArrows({ cells: [...memory.cells].reverse() }, positions)).toEqual([...arrows].reverse());
   });
 
   it("keeps a single incoming arrow centered", () => {
@@ -32,7 +32,7 @@ describe("arrow attachment points", () => {
     expect(arrows[0].target).toEqual({ x: 100, y: 50 });
   });
 
-  it("keeps many attachment points inside the target box", () => {
+  it("keeps all attachment points centered even with many arrows", () => {
     const cells: MemoryCell[] = [memory.cells[0]];
     const targets = new Map([[100, rect(0, 0)]]);
     for (let i = 0; i < 12; i++) {
@@ -42,12 +42,10 @@ describe("arrow attachment points", () => {
     }
     const arrows = getMemoryArrows({ cells }, { pointerSources: new Map(), memoryTargets: targets });
     const endpoints = arrows.map((arrow) => arrow.target.y);
-    expect(new Set(endpoints).size).toBe(12);
-    expect(Math.min(...endpoints)).toBeGreaterThanOrEqual(12);
-    expect(Math.max(...endpoints)).toBeLessThanOrEqual(88);
+    expect(endpoints).toEqual(Array(12).fill(50));
   });
 
-  it("treats opposite sides of a box as separate attachment groups", () => {
+  it("uses the facing edge for arrows coming from opposite sides", () => {
     const targets = new Map(positions.memoryTargets);
     targets.set(300, rect(-200, 0));
     const arrows = getMemoryArrows(memory, { pointerSources: new Map(), memoryTargets: targets });
